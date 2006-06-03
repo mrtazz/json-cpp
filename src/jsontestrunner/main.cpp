@@ -2,6 +2,10 @@
 //#include <stdexcept>
 #include <stdio.h>
 
+#if defined(_MSC_VER)  &&  _MSC_VER >= 1310
+# pragma warning( disable: 4996 )     // disable fopen deprecation warning
+#endif
+
 static std::string
 readInputTestFile( const char *path )
 {

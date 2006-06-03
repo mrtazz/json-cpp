@@ -16,8 +16,6 @@
 
 namespace Json {
 
-   class Value;
-
    /** \brief Type of the value held by a Value object.
     */
    enum ValueType
@@ -78,6 +76,8 @@ namespace Json {
       typedef std::vector<std::string> Members;
       typedef int Int;
       typedef unsigned int UInt;
+      typedef ValueIterator iterator;
+      typedef ValueConstIterator const_iterator;
 
       static const Value null;
       static const Int minInt;
@@ -109,147 +109,12 @@ namespace Json {
          int index_;
       };
 
+   public:
 # ifndef JSON_USE_CPPTL_SMALLMAP
       typedef std::map<CZString, Value> ObjectValues;
 # else
       typedef CppTL::SmallMap<CZString, Value> ObjectValues;
 # endif
-
-   public:
-      class IteratorBase
-      {
-      public:
-         typedef unsigned int size_t;
-         typedef int difference_type;
-         typedef IteratorBase SelfType;
-
-         IteratorBase();
-         explicit IteratorBase( const ObjectValues::iterator &current );
-
-         bool operator ==( const SelfType &other ) const
-         {
-            return isEqual( other );
-         }
-
-         bool operator !=( const SelfType &other ) const
-         {
-            return !isEqual( other );
-         }
-
-         difference_type operator -( const SelfType &other ) const
-         {
-            return computeDistance( other );
-         }
-
-      protected:
-         Value &deref() const;
-
-         void increment();
-
-         void decrement();
-
-         difference_type computeDistance( const SelfType &other ) const;
-
-         bool isEqual( const SelfType &other ) const;
-
-         void copy( const SelfType &other );
-
-      private:
-         ObjectValues::iterator current_;
-      };
-
-      class const_iterator : public IteratorBase
-      {
-      public:
-         typedef unsigned int size_t;
-         typedef int difference_type;
-         typedef const Value &reference;
-         typedef const Value *pointer;
-         typedef const_iterator SelfType;
-
-         const_iterator();
-         explicit const_iterator( const ObjectValues::iterator &current );
-         SelfType &operator =( const IteratorBase &other );
-
-         SelfType operator++( int )
-         {
-            SelfType temp( *this );
-            ++*this;
-            return temp;
-         }
-
-         SelfType operator--( int )
-         {
-            SelfType temp( *this );
-            --*this;
-            return temp;
-         }
-
-         SelfType &operator--()
-         {
-            decrement();
-            return *this;
-         }
-
-         SelfType &operator++()
-         {
-            increment();
-            return *this;
-         }
-
-         reference operator *() const
-         {
-            return deref();
-         }
-      };
-
-      class iterator : public IteratorBase
-      {
-      public:
-         typedef unsigned int size_t;
-         typedef int difference_type;
-         typedef Value &reference;
-         typedef Value *pointer;
-         typedef iterator SelfType;
-
-         iterator();
-         iterator( const const_iterator &other );
-         iterator( const iterator &other );
-         explicit iterator( const ObjectValues::iterator &current );
-
-         SelfType &operator =( const SelfType &other );
-
-         SelfType operator++( int )
-         {
-            SelfType temp( *this );
-            ++*this;
-            return temp;
-         }
-
-         SelfType operator--( int )
-         {
-            SelfType temp( *this );
-            --*this;
-            return temp;
-         }
-
-         SelfType &operator--()
-         {
-            decrement();
-            return *this;
-         }
-
-         SelfType &operator++()
-         {
-            increment();
-            return *this;
-         }
-
-         reference operator *() const
-         {
-            return deref();
-         }
-      };
 
    public:
       Value( ValueType type = nullValue );
@@ -419,6 +284,156 @@ namespace Json {
       bool allocated_ : 1;
       CommentInfo *comments_;
    };
+
+
+   /** \brief Experimental and untested: base class for Value iterators.
+    *
+    */
+   class ValueIteratorBase
+   {
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef ValueIteratorBase SelfType;
+
+      ValueIteratorBase();
+      explicit ValueIteratorBase( const Value::ObjectValues::iterator &current );
+
+      bool operator ==( const SelfType &other ) const
+      {
+         return isEqual( other );
+      }
+
+      bool operator !=( const SelfType &other ) const
+      {
+         return !isEqual( other );
+      }
+
+      difference_type operator -( const SelfType &other ) const
+      {
+         return computeDistance( other );
+      }
+
+   protected:
+      Value &deref() const;
+
+      void increment();
+
+      void decrement();
+
+      difference_type computeDistance( const SelfType &other ) const;
+
+      bool isEqual( const SelfType &other ) const;
+
+      void copy( const SelfType &other );
+
+   private:
+      Value::ObjectValues::iterator current_;
+   };
+
+   /** \brief Experimental and untested: const iterator for object and array value.
+    *
+    */
+   class ValueConstIterator : public ValueIteratorBase
+   {
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef const Value &reference;
+      typedef const Value *pointer;
+      typedef ValueConstIterator SelfType;
+
+      ValueConstIterator();
+      /*! \internal Use by Value to create an iterator.
+       */
+      explicit ValueConstIterator( const Value::ObjectValues::iterator &current );
+      SelfType &operator =( const ValueIteratorBase &other );
+
+      SelfType operator++( int )
+      {
+         SelfType temp( *this );
+         ++*this;
+         return temp;
+      }
+
+      SelfType operator--( int )
+      {
+         SelfType temp( *this );
+         --*this;
+         return temp;
+      }
+
+      SelfType &operator--()
+      {
+         decrement();
+         return *this;
+      }
+
+      SelfType &operator++()
+      {
+         increment();
+         return *this;
+      }
+
+      reference operator *() const
+      {
+         return deref();
+      }
+   };
+
+
+   /** \brief Experimental and untested: iterator for object and array value.
+    */
+   class ValueIterator : public ValueIteratorBase
+   {
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef Value &reference;
+      typedef Value *pointer;
+      typedef ValueIterator SelfType;
+
+      ValueIterator();
+      ValueIterator( const ValueConstIterator &other );
+      ValueIterator( const ValueIterator &other );
+      /*! \internal Use by Value to create an iterator.
+       */
+      explicit ValueIterator( const Value::ObjectValues::iterator &current );
+
+      SelfType &operator =( const SelfType &other );
+
+      SelfType operator++( int )
+      {
+         SelfType temp( *this );
+         ++*this;
+         return temp;
+      }
+
+      SelfType operator--( int )
+      {
+         SelfType temp( *this );
+         --*this;
+         return temp;
+      }
+
+      SelfType &operator--()
+      {
+         decrement();
+         return *this;
+      }
+
+      SelfType &operator++()
+      {
+         increment();
+         return *this;
+      }
+
+      reference operator *() const
+      {
+         return deref();
+      }
+   };
+
 
 
    /** \brief Experimental and untested: represents an element of the "path" to access a node.

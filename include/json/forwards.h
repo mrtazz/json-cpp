@@ -6,11 +6,16 @@
 namespace Json {
 
    class FastWriter;
-   class Path;
-   class PathArgument;
    class Reader;
    class StyledWriter;
+
+   // value.h
+   class Path;
+   class PathArgument;
    class Value;
+   class ValueIteratorBase;
+   class ValueIterator;
+   class ValueConstIterator;
 
 } // namespace Json
 

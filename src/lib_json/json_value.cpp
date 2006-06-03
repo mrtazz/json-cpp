@@ -19,7 +19,8 @@ const Value::Int Value::minInt = Value::Int( ~(Value::UInt(-1)/2) );
 const Value::Int Value::maxInt = Value::Int( Value::UInt(-1)/2 );
 const Value::UInt Value::maxUInt = Value::UInt(-1);
 
-// Our "safe" implementation of strdup. Allow null pointer to be passed.
+// A "safe" implementation of strdup. Allow null pointer to be passed. 
+// Also avoid warning on msvc80.
 
 inline char *safeStringDup( const char *czstring )
 {
@@ -49,45 +50,45 @@ inline char *safeStringDup( const std::string &str )
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
-// class Value::IteratorBase
+// class ValueIteratorBase
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
-Value::IteratorBase::IteratorBase()
+ValueIteratorBase::ValueIteratorBase()
 {
 }
 
 
-Value::IteratorBase::IteratorBase( const ObjectValues::iterator &current )
+ValueIteratorBase::ValueIteratorBase( const Value::ObjectValues::iterator &current )
    : current_( current )
 {
 }
 
 
 Value &
-Value::IteratorBase::deref() const
+ValueIteratorBase::deref() const
 {
    return current_->second;
 }
 
 
 void 
-Value::IteratorBase::increment()
+ValueIteratorBase::increment()
 {
    ++current_;
 }
 
 
 void 
-Value::IteratorBase::decrement()
+ValueIteratorBase::decrement()
 {
    --current_;
 }
 
 
-Value::IteratorBase::difference_type 
-Value::IteratorBase::computeDistance( const SelfType &other ) const
+ValueIteratorBase::difference_type 
+ValueIteratorBase::computeDistance( const SelfType &other ) const
 {
 # ifdef JSON_USE_CPPTL_SMALLMAP
    return current_ - other.current_;
@@ -98,14 +99,14 @@ Value::IteratorBase::computeDistance( const SelfType &other ) const
 
 
 bool 
-Value::IteratorBase::isEqual( const SelfType &other ) const
+ValueIteratorBase::isEqual( const SelfType &other ) const
 {
    return current_ == other.current_;
 }
 
 
 void 
-Value::IteratorBase::copy( const SelfType &other )
+ValueIteratorBase::copy( const SelfType &other )
 {
    current_ = other.current_;
 }
@@ -114,23 +115,23 @@ Value::IteratorBase::copy( const SelfType &other )
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
-// class Value::const_iterator
+// class ValueConstIterator
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
-Value::const_iterator::const_iterator()
+ValueConstIterator::ValueConstIterator()
 {
 }
 
 
-Value::const_iterator::const_iterator( const ObjectValues::iterator &current )
-   : IteratorBase( current )
+ValueConstIterator::ValueConstIterator( const Value::ObjectValues::iterator &current )
+   : ValueIteratorBase( current )
 {
 }
 
-Value::const_iterator::SelfType &
-Value::const_iterator::operator =( const IteratorBase &other )
+ValueConstIterator &
+ValueConstIterator::operator =( const ValueIteratorBase &other )
 {
    copy( other );
    return *this;
@@ -140,33 +141,33 @@ Value::const_iterator::operator =( const IteratorBase &other )
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
-// class Value::iterator
+// class ValueIterator
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
-Value::iterator::iterator()
+ValueIterator::ValueIterator()
 {
 }
 
 
-Value::iterator::iterator( const ObjectValues::iterator &current )
-   : IteratorBase( current )
+ValueIterator::ValueIterator( const Value::ObjectValues::iterator &current )
+   : ValueIteratorBase( current )
 {
 }
 
-Value::iterator::iterator( const const_iterator &other )
-   : IteratorBase( other )
+ValueIterator::ValueIterator( const ValueConstIterator &other )
+   : ValueIteratorBase( other )
 {
 }
 
-Value::iterator::iterator( const iterator &other )
-   : IteratorBase( other )
+ValueIterator::ValueIterator( const ValueIterator &other )
+   : ValueIteratorBase( other )
 {
 }
 
-Value::iterator::SelfType &
-Value::iterator::operator =( const SelfType &other )
+ValueIterator &
+ValueIterator::operator =( const SelfType &other )
 {
    copy( other );
    return *this;
