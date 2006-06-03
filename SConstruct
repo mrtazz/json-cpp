@@ -133,5 +133,5 @@ RunJSONTests = ActionFactory(runJSONTests_action, runJSONTests_string )
 
 env.Alias( 'check' )
 
-buildProjectInDirectory( 'src/jsontest' )
+buildProjectInDirectory( 'src/jsontestrunner' )
 buildProjectInDirectory( 'src/lib_json' )

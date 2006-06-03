@@ -1,7 +1,11 @@
-#include <json/json_writer.h>
+#include <json/writer.h>
 #include <utility>
 #include <assert.h>
 #include <stdio.h>
+
+#if _MSC_VER >= 1400 // VC++ 8.0
+#pragma warning( disable : 4996 )   // disable warning about strdup being deprecated.
+#endif
 
 namespace Json {
 
@@ -45,7 +49,11 @@ std::string valueToString( Value::UInt value )
 std::string valueToString( double value )
 {
    char buffer[32];
-   sprintf( buffer, "%.16g", value );
+#ifdef __STDC_SECURE_LIB__ // Use secure version with visual studio 2005 to avoid warning.
+   sprintf_s(buffer, sizeof(buffer), "%.16g", value); 
+#else	
+   sprintf(buffer, "%.16g", value); 
+#endif
    return buffer;
 }
 
@@ -67,7 +75,7 @@ std::string valueToQuotedString( const char *value )
 std::string 
 FastWriter::write( const Value &root )
 {
-   document_.resize(0);
+   document_ = "";
    writeValue( root );
    document_ += "\n";
    return document_;
@@ -145,9 +153,9 @@ StyledWriter::StyledWriter()
 std::string 
 StyledWriter::write( const Value &root )
 {
-   document_.resize(0);
+   document_ = "";
    addChildValues_ = false;
-   indentString_.resize(0);
+   indentString_ = "";
    writeCommentBeforeValue( root );
    writeValue( root );
    writeCommentAfterValueOnSameLine( root );

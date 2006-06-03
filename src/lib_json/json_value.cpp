@@ -1,5 +1,5 @@
-#include <json/json_value.h>
-#include <json/json_writer.h>
+#include <json/value.h>
+#include <json/writer.h>
 #include <utility>
 #include "assert.h"
 #ifdef JSON_USE_CPPTL
@@ -16,6 +16,75 @@ const Value Value::null;
 const Value::Int Value::minInt = Value::Int( ~(Value::UInt(-1)/2) );
 const Value::Int Value::maxInt = Value::Int( Value::UInt(-1)/2 );
 const Value::UInt Value::maxUInt = Value::UInt(-1);
+
+
+
+const char *
+Value::MemberIterator::deref() const
+{
+   CPPTL_ASSERT_MESSAGE( current_ != 0,
+                        "SmallMapIterator: dereferencing invalid iterator" );
+   return current_->first.c_str();
+}
+
+
+void 
+Value::MemberIterator::increment()
+{
+   CPPTL_ASSERT_MESSAGE( map_  &&  ( current_ < map_->data_ + map_->size_ ), 
+                        "SmallMapIterator::increment: incrementing beyond end" );
+   ++current_;
+}
+
+
+void 
+Value::MemberIterator::decrement()
+{
+   CPPTL_ASSERT_MESSAGE( map_  &&  ( current_ > map_->data_ ), 
+                        "SmallMapIterator::decrement: decrementing beyond beginning" );
+   --current_;
+}
+
+
+void 
+Value::MemberIterator::advance( difference_type n )
+{
+   CPPTL_ASSERT_MESSAGE( map_  &&  map_->size_  &&
+                        ( current_+n < map_->data_ + map_->size_  &&  current+n >= map_->data_), 
+                        "SmallMapIterator::advance: advancing beyond end or beginning" );
+   current_ += n;
+}
+
+
+Value::MemberIterator::difference_type 
+Value::MemberIterator::computeDistance( const SelfType &other ) const
+{
+   CPPTL_ASSERT_MESSAGE( map_->data_ == other.map_->data_, "Comparing iterator on different container." );
+   return current_ - other.current_;
+}
+
+
+bool 
+Value::MemberIterator::isEqual( const SelfType &other ) const
+{
+   return current_ == other.current_;
+}
+
+
+bool 
+Value::MemberIterator::isLess( const SelfType &other ) const
+{
+   return current_ < other.current_;
+}
+
+
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::CommentInfo
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
 
 
 Value::CommentInfo::CommentInfo()
@@ -39,6 +108,13 @@ Value::CommentInfo::setComment( const char *text )
 }
 
 
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::CZString
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
 
 // Notes: index_ indicates if the string was allocated when
 // a string is stored.
@@ -65,7 +141,7 @@ Value::CZString::CZString( const CZString &other )
 
 Value::CZString::~CZString()
 {
-   if ( index_ == duplicate )
+   if ( cstr_  &&  index_ == duplicate )
       free( const_cast<char *>( cstr_ ) );
 }
 
@@ -115,11 +191,19 @@ Value::CZString::c_str() const
 }
 
 
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::Value
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
 
 
 Value::Value( ValueType type )
    : type_( type )
    , comments_( 0 )
+   , allocated_( 0 )
 {
    switch ( type )
    {
@@ -172,6 +256,7 @@ Value::Value( double value )
 
 Value::Value( const char *value )
    : type_( stringValue )
+   , allocated_( true )
    , comments_( 0 )
 {
    value_.string_ = value ? strdup( value ) : 0;
@@ -179,6 +264,7 @@ Value::Value( const char *value )
 
 Value::Value( const std::string &value )
    : type_( stringValue )
+   , allocated_( true )
    , comments_( 0 )
 {
    value_.string_ = value.empty() ? 0 : strdup( value.c_str() );
@@ -187,6 +273,7 @@ Value::Value( const std::string &value )
 # ifdef JSON_USE_CPPTL
 Value::Value( const CppTL::ConstString &value )
    : type_( stringValue )
+   , allocated_( true )
    , comments_( 0 )
 {
    value_.string_ = value.empty() ? 0 : strdup( value.c_str() );
@@ -216,7 +303,10 @@ Value::Value( const Value &other )
       break;
    case stringValue:
       if ( other.value_.string_ )
+      {
          value_.string_ = strdup( other.value_.string_ );
+         allocated_ = true;
+      }
       else
          value_.string_ = 0;
       break;
@@ -252,7 +342,8 @@ Value::~Value()
    case booleanValue:
       break;
    case stringValue:
-      free( value_.string_ );
+      if ( allocated_ )
+         free( value_.string_ );
       break;
    case arrayValue:
    case objectValue:
@@ -277,8 +368,13 @@ Value::operator=( const Value &other )
 void 
 Value::swap( Value &other )
 {
-   std::swap( type_, other.type_ );
+   ValueType temp = type_;
+   type_ = other.type_;
+   other.type_ = temp;
    std::swap( value_, other.value_ );
+   bool temp2 = allocated_;
+   allocated_ = other.allocated_;
+   other.allocated_ = temp2;
 }
 
 ValueType 
