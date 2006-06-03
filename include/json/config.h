@@ -6,6 +6,7 @@
 
 /// If defined, indicates that json may leverage CppTL library
 //#  define JSON_USE_CPPTL 1
+//#  define JSON_USE_CPPTL_SMALLMAP 1
 
 
 # ifdef JSON_IN_CPPTL

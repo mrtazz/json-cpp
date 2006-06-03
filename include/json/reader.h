@@ -1,10 +1,9 @@
 #ifndef CPPTL_JSON_READER_H_INCLUDED
 # define CPPTL_JSON_READER_H_INCLUDED
 
-# include "json_forwards.h"
-# include "json_value.h"
+# include "forwards.h"
+# include "value.h"
 # include <deque>
-# include <map>
 # include <stack>
 # include <string>
 

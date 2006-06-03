@@ -1,9 +1,8 @@
 #ifndef JSON_WRITER_H_INCLUDED
 # define JSON_WRITER_H_INCLUDED
 
-# include "json_value.h"
-//# include "json_reader.h"
-# include <deque>
+# include "value.h"
+# include <vector>
 # include <string>
 
 namespace Json {

@@ -167,34 +167,31 @@
 			RelativePath="..\..\include\json\autolink.h">
 		</File>
 		<File
+			RelativePath="..\..\include\json\config.h">
+		</File>
+		<File
+			RelativePath="..\..\include\json\forwards.h">
+		</File>
+		<File
 			RelativePath="..\..\include\json\json.h">
-		</File>
-		<File
-			RelativePath="..\..\include\json\json_autolink.h">
-		</File>
-		<File
-			RelativePath="..\..\include\json\json_config.h">
-		</File>
-		<File
-			RelativePath="..\..\include\json\json_forwards.h">
 		</File>
 		<File
 			RelativePath=".\json_reader.cpp">
 		</File>
 		<File
-			RelativePath="..\..\include\json\json_reader.h">
-		</File>
-		<File
 			RelativePath=".\json_value.cpp">
-		</File>
-		<File
-			RelativePath="..\..\include\json\json_value.h">
 		</File>
 		<File
 			RelativePath=".\json_writer.cpp">
 		</File>
 		<File
-			RelativePath="..\..\include\json\json_writer.h">
+			RelativePath="..\..\include\json\reader.h">
+		</File>
+		<File
+			RelativePath="..\..\include\json\value.h">
+		</File>
+		<File
+			RelativePath="..\..\include\json\writer.h">
 		</File>
 	</Files>
 	<Globals>

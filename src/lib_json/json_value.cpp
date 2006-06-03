@@ -9,6 +9,7 @@
 
 #define JSON_ASSERT_UNREACHABLE assert( false )
 #define JSON_ASSERT( condition ) assert( condition );  // @todo <= change this into an exception throw
+#define JSON_ASSERT_MESSAGE( condition, message ) assert( condition &&  message );  // @todo <= change this into an exception throw
 
 namespace Json {
 
@@ -19,63 +20,63 @@ const Value::UInt Value::maxUInt = Value::UInt(-1);
 
 
 
-const char *
-Value::MemberIterator::deref() const
-{
-   CPPTL_ASSERT_MESSAGE( current_ != 0,
-                        "SmallMapIterator: dereferencing invalid iterator" );
-   return current_->first.c_str();
-}
-
-
-void 
-Value::MemberIterator::increment()
-{
-   CPPTL_ASSERT_MESSAGE( map_  &&  ( current_ < map_->data_ + map_->size_ ), 
-                        "SmallMapIterator::increment: incrementing beyond end" );
-   ++current_;
-}
-
-
-void 
-Value::MemberIterator::decrement()
-{
-   CPPTL_ASSERT_MESSAGE( map_  &&  ( current_ > map_->data_ ), 
-                        "SmallMapIterator::decrement: decrementing beyond beginning" );
-   --current_;
-}
-
-
-void 
-Value::MemberIterator::advance( difference_type n )
-{
-   CPPTL_ASSERT_MESSAGE( map_  &&  map_->size_  &&
-                        ( current_+n < map_->data_ + map_->size_  &&  current+n >= map_->data_), 
-                        "SmallMapIterator::advance: advancing beyond end or beginning" );
-   current_ += n;
-}
-
-
-Value::MemberIterator::difference_type 
-Value::MemberIterator::computeDistance( const SelfType &other ) const
-{
-   CPPTL_ASSERT_MESSAGE( map_->data_ == other.map_->data_, "Comparing iterator on different container." );
-   return current_ - other.current_;
-}
-
-
-bool 
-Value::MemberIterator::isEqual( const SelfType &other ) const
-{
-   return current_ == other.current_;
-}
-
-
-bool 
-Value::MemberIterator::isLess( const SelfType &other ) const
-{
-   return current_ < other.current_;
-}
+//const char *
+//Value::MemberIterator::deref() const
+//{
+//   JSON_ASSERT_MESSAGE( current_ != 0,
+//                        "SmallMapIterator: dereferencing invalid iterator" );
+//   return current_->first.c_str();
+//}
+//
+//
+//void 
+//Value::MemberIterator::increment()
+//{
+//   JSON_ASSERT_MESSAGE( map_  &&  ( current_ < map_->data_ + map_->size_ ), 
+//                        "SmallMapIterator::increment: incrementing beyond end" );
+//   ++current_;
+//}
+//
+//
+//void 
+//Value::MemberIterator::decrement()
+//{
+//   JSON_ASSERT_MESSAGE( map_  &&  ( current_ > map_->data_ ), 
+//                        "SmallMapIterator::decrement: decrementing beyond beginning" );
+//   --current_;
+//}
+//
+//
+//void 
+//Value::MemberIterator::advance( difference_type n )
+//{
+//   JSON_ASSERT_MESSAGE( map_  &&  map_->size_  &&
+//                        ( current_+n < map_->data_ + map_->size_  &&  current+n >= map_->data_), 
+//                        "SmallMapIterator::advance: advancing beyond end or beginning" );
+//   current_ += n;
+//}
+//
+//
+//Value::MemberIterator::difference_type 
+//Value::MemberIterator::computeDistance( const SelfType &other ) const
+//{
+//   JSON_ASSERT_MESSAGE( map_->data_ == other.map_->data_, "Comparing iterator on different container." );
+//   return current_ - other.current_;
+//}
+//
+//
+//bool 
+//Value::MemberIterator::isEqual( const SelfType &other ) const
+//{
+//   return current_ == other.current_;
+//}
+//
+//
+//bool 
+//Value::MemberIterator::isLess( const SelfType &other ) const
+//{
+//   return current_ < other.current_;
+//}
 
 
 // //////////////////////////////////////////////////////////////////

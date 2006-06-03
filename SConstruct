@@ -65,7 +65,7 @@ elif platform == 'msvc80':
     env['MSVS_VERSION']='8.0'
     for tool in ['msvc', 'msvs', 'mslink', 'masm', 'mslib']:
         env.Tool( tool )
-    env['CXXFLAGS']='-GR -GX /nologo /MT'
+    env['CXXFLAGS']='-GR -EHsc /nologo /MT'
 elif platform == 'mingw':
     env.Tool( 'mingw' )
     env.Append( CPPDEFINES=[ "WIN32", "NDEBUG", "_MT" ] )

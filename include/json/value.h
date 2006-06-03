@@ -1,11 +1,15 @@
 #ifndef CPPTL_JSON_H_INCLUDED
 # define CPPTL_JSON_H_INCLUDED
 
-# include "json_forwards.h"
+# include "forwards.h"
 # include <string>
-# include <map>
 # include <vector>
 
+# ifndef JSON_USE_CPPTL_SMALLMAP
+#  include <map>
+# else
+#  include <cpptl/smallmap.h>
+# endif
 # ifdef JSON_USE_CPPTL
 #  include <cpptl/forwards.h>
 # endif
@@ -79,6 +83,168 @@ namespace Json {
       static const Int minInt;
       static const Int maxInt;
       static const UInt maxUInt;
+   private:
+
+      class CZString 
+      {
+      public:
+         enum DuplicationPolicy 
+         {
+            noDuplication = 0,
+            duplicate,
+            duplicateOnCopy
+         };
+         CZString( int index );
+         CZString( const char *cstr, DuplicationPolicy allocate );
+         CZString( const CZString &other );
+         ~CZString();
+         CZString &operator =( const CZString &other );
+         bool operator<( const CZString &other ) const;
+         bool operator==( const CZString &other ) const;
+         int index() const;
+         const char *c_str() const;
+      private:
+         void swap( CZString &other );
+         const char *cstr_;
+         int index_;
+      };
+
+# ifndef JSON_USE_CPPTL_SMALLMAP
+      typedef std::map<CZString, Value> ObjectValues;
+# else
+      typedef CppTL::SmallMap<CZString, Value> ObjectValues;
+# endif
+
+   public:
+      //class MemberIterator
+      //{
+      //public:
+      //   typedef unsigned int size_t;
+      //   typedef int difference_type;
+      //   typedef MemberIterator SelfType;
+      //   typedef const char *reference;
+      //   typedef const char **pointer;
+
+      //   MemberIterator();
+      //   explicit MemberIterator( ObjectValues::const_iterator current );
+
+      //   bool operator ==( const SelfType &other ) const
+      //   {
+      //      return isEqual( other );
+      //   }
+
+      //   bool operator !=( const SelfType &other ) const
+      //   {
+      //      return !isEqual( other );
+      //   }
+
+      //   bool operator <( const SelfType &other ) const
+      //   {
+      //      return isLess( other );
+      //   }
+
+      //   bool operator <=( const SelfType &other ) const
+      //   {
+      //      return !other.isLess( *this );
+      //   }
+
+      //   bool operator >=( const SelfType &other ) const
+      //   {
+      //      return !isLess( other );
+      //   }
+
+      //   bool operator >( const SelfType &other ) const
+      //   {
+      //      return other.isLess( *this );
+      //   }
+
+      //   SelfType &operator++()
+      //   {
+      //      increment();
+      //      return *this;
+      //   }
+
+      //   SelfType operator++( int )
+      //   {
+      //      SelfType temp( *this );
+      //      ++*this;
+      //      return temp;
+      //   }
+
+      //   SelfType &operator--()
+      //   {
+      //      decrement();
+      //      return *this;
+      //   }
+
+      //   SelfType operator--( int )
+      //   {
+      //      SelfType temp( *this );
+      //      --*this;
+      //      return temp;
+      //   }
+
+      //   SelfType &operator +=( difference_type n )
+      //   {
+      //      advance( n );
+      //      return *this;
+      //   }
+
+      //   SelfType operator +( difference_type n ) const
+      //   {
+      //      SelfType temp( *this );
+      //      return temp += n;
+      //   }
+
+      //   SelfType &operator -=( difference_type n )
+      //   {
+      //      advance( -n );
+      //      return *this;
+      //   }
+
+      //   SelfType operator -( difference_type n ) const
+      //   {
+      //      SelfType temp( *this );
+      //      return temp -= n;
+      //   }
+
+      //   reference operator[]( difference_type n ) const
+      //   {
+      //      return *( *this + n );
+      //   }
+
+      //   reference operator *() const
+      //   {
+      //      return deref();
+      //   }
+
+      //   difference_type operator -( const SelfType &other ) const
+      //   {
+      //      return computeDistance( other );
+      //   }
+
+      //private:
+      //   const char *deref() const;
+
+      //   void increment();
+
+      //   void decrement();
+
+      //   void advance( difference_type n );
+
+      //   difference_type computeDistance( const SelfType &other ) const;
+
+      //   bool isEqual( const SelfType &other ) const;
+
+      //   bool isLess( const SelfType &other ) const;
+
+      //private:
+      //   //ObjectValues::const_iterator begin_;
+      //   //ObjectValues::const_iterator end_;
+      //   ObjectValues::const_iterator current_;
+      //};
+
+   public:
 
       Value( ValueType type = nullValue );
       Value( Int value );
@@ -219,31 +385,6 @@ namespace Json {
          char *comment_;
       };
 
-      struct CZString 
-      {
-         enum DuplicationPolicy 
-         {
-            noDuplication = 0,
-            duplicate,
-            duplicateOnCopy
-         };
-         CZString( int index );
-         CZString( const char *cstr, DuplicationPolicy allocate );
-         CZString( const CZString &other );
-         ~CZString();
-         CZString &operator =( const CZString &other );
-         bool operator<( const CZString &other ) const;
-         bool operator==( const CZString &other ) const;
-         int index() const;
-         const char *c_str() const;
-      private:
-         void swap( CZString &other );
-         const char *cstr_;
-         int index_;
-      };
-
-      typedef std::map<CZString, Value> ObjectValues;
-
       struct MemberNamesTransform
       {
          typedef const char *result_type;
@@ -262,7 +403,8 @@ namespace Json {
          char *string_;
          ObjectValues *map_;
       } value_;
-      ValueType type_;
+      ValueType type_ : 8;
+      bool allocated_ : 1;
       CommentInfo *comments_;
    };
 
