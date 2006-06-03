@@ -2,6 +2,8 @@ import os
 import os.path
 import sys
 
+JSONCPP_VERSION = '0.1'
+
 options = Options()
 options.Add( EnumOption('platform',
                         'Platform (compiler/stl) used to build the project',
@@ -17,6 +19,7 @@ except KeyError:
 
 print "Building using PLATFORM =", platform
 
+rootbuild_dir = Dir('#buildscons')
 build_dir = os.path.join( '#buildscons', platform )
 bin_dir = os.path.join( '#bin', platform )
 lib_dir = os.path.join( '#libs', platform )
@@ -86,6 +89,9 @@ env['LIB_PLATFORM'] = short_platform
 env['LIB_LINK_TYPE'] = 'lib'    # static
 env['LIB_CRUNTIME'] = 'mt'
 env['LIB_NAME_SUFFIX'] = '${LIB_PLATFORM}_${LIB_LINK_TYPE}${LIB_CRUNTIME}'  # must match autolink naming convention
+env['JSONCPP_VERSION'] = JSONCPP_VERSION
+env['BUILD_DIR'] = env.Dir(build_dir)
+env['ROOTBUILD_DIR'] = env.Dir(rootbuild_dir)
                       
 env_testing = env.Copy( )
 env_testing.Append( LIBS = ['json_${LIB_NAME_SUFFIX}'] )
@@ -138,9 +144,11 @@ RunJSONTests = ActionFactory(runJSONTests_action, runJSONTests_string )
 env.Alias( 'check' )
 
 env.Tool('doxygen')
+env.Tool('substinfile')
+env.Tool('zip')
+
+env['JSONCPP_BUILD_DOC'] = ('doc' in COMMAND_LINE_TARGETS) or ('doc-dist' in COMMAND_LINE_TARGETS)
 
 buildProjectInDirectory( 'src/jsontestrunner' )
 buildProjectInDirectory( 'src/lib_json' )
 buildProjectInDirectory( 'doc' )
-##build_doc = ('doc' in COMMAND_LINE_TARGETS) or ('doc-dist' in COMMAND_LINE_TARGETS)
-##if build_doc:

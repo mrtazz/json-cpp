@@ -12,16 +12,24 @@ def DoxyfileParse(file_contents):
 
    import shlex
    lex = shlex.shlex(instream = file_contents, posix = True)
-   lex.wordchars += "*+./-"
+   lex.wordchars += "*+./-:"
    lex.whitespace = lex.whitespace.replace("\n", "")
    lex.escape = ""
 
    lineno = lex.lineno
+   last_backslash_lineno = lineno
    token = lex.get_token()
    key = token   # the first token should be a key
    last_token = ""
    key_token = False
    next_key = False
+   new_data = True
+
+   def append_data(data, key, new_data, token):
+      if new_data or len(data[key]) == 0:
+         data[key].append(token)
+      else:
+         data[key][-1] += token
 
    while token:
       if token in ['\n']:
@@ -39,10 +47,15 @@ def DoxyfileParse(file_contents):
          elif token == "=":
             data[key] = list()
          else:
-            data[key].append(token)
+            append_data( data, key, new_data, token )
+            new_data = True
 
       last_token = token
       token = lex.get_token()
+      
+      if last_token == '\\' and token != '\n':
+         new_data = False
+         append_data( data, key, new_data, '\\' )
 
    # compress lists of len 1 into single strings
    for (k, v) in data.items():
@@ -103,7 +116,7 @@ def DoxySourceScan(node, env, path):
          else:
             for pattern in file_patterns:
                sources.extend(glob.glob("/".join([node, pattern])))
-
+   sources = map( lambda path: env.File(path), sources )
    return sources
 
 
@@ -125,7 +138,7 @@ def DoxyEmitter(source, target, env):
    data = DoxyfileParse(source[0].get_contents())
 
    targets = []
-   out_dir = os.path.sep.join( data.get("OUTPUT_DIRECTORY", ".") )
+   out_dir = data.get("OUTPUT_DIRECTORY", ".")
 
    # add our output locations
    for (k, v) in output_formats.items():
