@@ -31,6 +31,7 @@ if not os.path.exists( sconsign_dir_path ):
 SConsignFile( sconsign_path )
 
 env = Environment( ENV = {'PATH' : os.environ['PATH']},
+                   toolpath = ['scons-tools'],
                    tools=[] ) #, tools=['default'] )
 
 if platform == 'suncc':
@@ -127,11 +128,19 @@ def runJSONTests_action( target, source = None, env = None ):
 def runJSONTests_string( target, source = None, env = None ):
     return 'RunJSONTests("%s")' % source
 
+##def buildDoc( doxyfile_path ):
+##    doc_cmd = env.Doxygen( doxyfile_path )
+
 import SCons.Action
 ActionFactory = SCons.Action.ActionFactory
 RunJSONTests = ActionFactory(runJSONTests_action, runJSONTests_string )
 
 env.Alias( 'check' )
 
+env.Tool('doxygen')
+
 buildProjectInDirectory( 'src/jsontestrunner' )
 buildProjectInDirectory( 'src/lib_json' )
+buildProjectInDirectory( 'doc' )
+##build_doc = ('doc' in COMMAND_LINE_TARGETS) or ('doc-dist' in COMMAND_LINE_TARGETS)
+##if build_doc:
