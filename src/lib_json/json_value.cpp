@@ -6,6 +6,7 @@
 # include <cpptl/conststring.h>
 # include <cpptl/enumerator.h>
 #endif
+#include <stddef.h>    // size_t
 
 #define JSON_ASSERT_UNREACHABLE assert( false )
 #define JSON_ASSERT( condition ) assert( condition );  // @todo <= change this into an exception throw
@@ -18,65 +19,159 @@ const Value::Int Value::minInt = Value::Int( ~(Value::UInt(-1)/2) );
 const Value::Int Value::maxInt = Value::Int( Value::UInt(-1)/2 );
 const Value::UInt Value::maxUInt = Value::UInt(-1);
 
+// Our "safe" implementation of strdup. Allow null pointer to be passed.
+
+inline char *safeStringDup( const char *czstring )
+{
+   if ( czstring )
+   {
+      const size_t length = (unsigned int)( strlen(czstring) + 1 );
+      char *newString = static_cast<char *>( malloc( length ) );
+      memcpy( newString, czstring, length );
+      return newString;
+   }
+   return 0;
+}
+
+inline char *safeStringDup( const std::string &str )
+{
+   if ( !str.empty() )
+   {
+      const size_t length = str.length();
+      char *newString = static_cast<char *>( malloc( length + 1 ) );
+      memcpy( newString, str.c_str(), length );
+      newString[length] = 0;
+      return newString;
+   }
+   return 0;
+}
+
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::IteratorBase
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+
+Value::IteratorBase::IteratorBase()
+{
+}
 
 
-//const char *
-//Value::MemberIterator::deref() const
-//{
-//   JSON_ASSERT_MESSAGE( current_ != 0,
-//                        "SmallMapIterator: dereferencing invalid iterator" );
-//   return current_->first.c_str();
-//}
-//
-//
-//void 
-//Value::MemberIterator::increment()
-//{
-//   JSON_ASSERT_MESSAGE( map_  &&  ( current_ < map_->data_ + map_->size_ ), 
-//                        "SmallMapIterator::increment: incrementing beyond end" );
-//   ++current_;
-//}
-//
-//
-//void 
-//Value::MemberIterator::decrement()
-//{
-//   JSON_ASSERT_MESSAGE( map_  &&  ( current_ > map_->data_ ), 
-//                        "SmallMapIterator::decrement: decrementing beyond beginning" );
-//   --current_;
-//}
-//
-//
-//void 
-//Value::MemberIterator::advance( difference_type n )
-//{
-//   JSON_ASSERT_MESSAGE( map_  &&  map_->size_  &&
-//                        ( current_+n < map_->data_ + map_->size_  &&  current+n >= map_->data_), 
-//                        "SmallMapIterator::advance: advancing beyond end or beginning" );
-//   current_ += n;
-//}
-//
-//
-//Value::MemberIterator::difference_type 
-//Value::MemberIterator::computeDistance( const SelfType &other ) const
-//{
-//   JSON_ASSERT_MESSAGE( map_->data_ == other.map_->data_, "Comparing iterator on different container." );
-//   return current_ - other.current_;
-//}
-//
-//
-//bool 
-//Value::MemberIterator::isEqual( const SelfType &other ) const
-//{
-//   return current_ == other.current_;
-//}
-//
-//
-//bool 
-//Value::MemberIterator::isLess( const SelfType &other ) const
-//{
-//   return current_ < other.current_;
-//}
+Value::IteratorBase::IteratorBase( const ObjectValues::iterator &current )
+   : current_( current )
+{
+}
+
+
+Value &
+Value::IteratorBase::deref() const
+{
+   return current_->second;
+}
+
+
+void 
+Value::IteratorBase::increment()
+{
+   ++current_;
+}
+
+
+void 
+Value::IteratorBase::decrement()
+{
+   --current_;
+}
+
+
+Value::IteratorBase::difference_type 
+Value::IteratorBase::computeDistance( const SelfType &other ) const
+{
+# ifdef JSON_USE_CPPTL_SMALLMAP
+   return current_ - other.current_;
+# else
+   return difference_type( std::distance( current_, other.current_ ) );
+# endif
+}
+
+
+bool 
+Value::IteratorBase::isEqual( const SelfType &other ) const
+{
+   return current_ == other.current_;
+}
+
+
+void 
+Value::IteratorBase::copy( const SelfType &other )
+{
+   current_ = other.current_;
+}
+
+
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::const_iterator
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+
+Value::const_iterator::const_iterator()
+{
+}
+
+
+Value::const_iterator::const_iterator( const ObjectValues::iterator &current )
+   : IteratorBase( current )
+{
+}
+
+Value::const_iterator::SelfType &
+Value::const_iterator::operator =( const IteratorBase &other )
+{
+   copy( other );
+   return *this;
+}
+
+
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// class Value::iterator
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+// //////////////////////////////////////////////////////////////////
+
+Value::iterator::iterator()
+{
+}
+
+
+Value::iterator::iterator( const ObjectValues::iterator &current )
+   : IteratorBase( current )
+{
+}
+
+Value::iterator::iterator( const const_iterator &other )
+   : IteratorBase( other )
+{
+}
+
+Value::iterator::iterator( const iterator &other )
+   : IteratorBase( other )
+{
+}
+
+Value::iterator::SelfType &
+Value::iterator::operator =( const SelfType &other )
+{
+   copy( other );
+   return *this;
+}
+
 
 
 // //////////////////////////////////////////////////////////////////
@@ -105,7 +200,7 @@ Value::CommentInfo::setComment( const char *text )
 {
    if ( comment_ )
       free( comment_ );
-   comment_ = text ? strdup( text ) : 0;
+   comment_ = safeStringDup( text );
 }
 
 
@@ -127,13 +222,13 @@ Value::CZString::CZString( int index )
 }
 
 Value::CZString::CZString( const char *cstr, DuplicationPolicy allocate )
-   : cstr_( allocate == duplicate ? strdup(cstr) : cstr )
+   : cstr_( allocate == duplicate ? safeStringDup(cstr) : cstr )
    , index_( allocate )
 {
 }
 
 Value::CZString::CZString( const CZString &other )
-   : cstr_( other.index_ != noDuplication &&  other.cstr_ != 0 ? strdup( other.cstr_ )
+   : cstr_( other.index_ != noDuplication &&  other.cstr_ != 0 ? safeStringDup( other.cstr_ )
                                                                : other.cstr_ )
    , index_( other.cstr_ ? (other.index_ == noDuplication ? noDuplication : duplicate)
                          : other.index_ )
@@ -260,7 +355,7 @@ Value::Value( const char *value )
    , allocated_( true )
    , comments_( 0 )
 {
-   value_.string_ = value ? strdup( value ) : 0;
+   value_.string_ = safeStringDup( value );
 }
 
 Value::Value( const std::string &value )
@@ -268,7 +363,7 @@ Value::Value( const std::string &value )
    , allocated_( true )
    , comments_( 0 )
 {
-   value_.string_ = value.empty() ? 0 : strdup( value.c_str() );
+   value_.string_ = safeStringDup( value );
 
 }
 # ifdef JSON_USE_CPPTL
@@ -277,7 +372,7 @@ Value::Value( const CppTL::ConstString &value )
    , allocated_( true )
    , comments_( 0 )
 {
-   value_.string_ = value.empty() ? 0 : strdup( value.c_str() );
+   value_.string_ = safeStringDup( value );
 }
 # endif
 
@@ -305,7 +400,7 @@ Value::Value( const Value &other )
    case stringValue:
       if ( other.value_.string_ )
       {
-         value_.string_ = strdup( other.value_.string_ );
+         value_.string_ = safeStringDup( other.value_.string_ );
          allocated_ = true;
       }
       else
@@ -1077,6 +1172,68 @@ Value::toStyledString() const
 {
    StyledWriter writer;
    return writer.write( *this );
+}
+
+
+Value::const_iterator 
+Value::begin() const
+{
+   switch ( type_ )
+   {
+   case arrayValue:
+   case objectValue:
+      if ( value_.map_ )
+         return const_iterator( value_.map_->begin() );
+      // fall through default if no valid map
+   default:
+      return const_iterator();
+   }
+}
+
+Value::const_iterator 
+Value::end() const
+{
+   switch ( type_ )
+   {
+   case arrayValue:
+   case objectValue:
+      if ( value_.map_ )
+         return const_iterator( value_.map_->end() );
+      // fall through default if no valid map
+   default:
+      return const_iterator();
+   }
+}
+
+
+Value::iterator 
+Value::begin()
+{
+   switch ( type_ )
+   {
+   case arrayValue:
+   case objectValue:
+      if ( value_.map_ )
+         return iterator( value_.map_->begin() );
+      // fall through default if no valid map
+   default:
+      return iterator();
+   }
+}
+
+Value::iterator 
+Value::end()
+{
+   switch ( type_ )
+   {
+   case arrayValue:
+   case objectValue:
+      if ( value_.map_ )
+         return iterator( value_.map_->end() );
+      // fall through default if no valid map
+   default:
+      return iterator();
+   }
 }
 
 

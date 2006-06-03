@@ -116,136 +116,142 @@ namespace Json {
 # endif
 
    public:
-      //class MemberIterator
-      //{
-      //public:
-      //   typedef unsigned int size_t;
-      //   typedef int difference_type;
-      //   typedef MemberIterator SelfType;
-      //   typedef const char *reference;
-      //   typedef const char **pointer;
+      class IteratorBase
+      {
+      public:
+         typedef unsigned int size_t;
+         typedef int difference_type;
+         typedef IteratorBase SelfType;
 
-      //   MemberIterator();
-      //   explicit MemberIterator( ObjectValues::const_iterator current );
+         IteratorBase();
+         explicit IteratorBase( const ObjectValues::iterator &current );
 
-      //   bool operator ==( const SelfType &other ) const
-      //   {
-      //      return isEqual( other );
-      //   }
+         bool operator ==( const SelfType &other ) const
+         {
+            return isEqual( other );
+         }
 
-      //   bool operator !=( const SelfType &other ) const
-      //   {
-      //      return !isEqual( other );
-      //   }
+         bool operator !=( const SelfType &other ) const
+         {
+            return !isEqual( other );
+         }
 
-      //   bool operator <( const SelfType &other ) const
-      //   {
-      //      return isLess( other );
-      //   }
+         difference_type operator -( const SelfType &other ) const
+         {
+            return computeDistance( other );
+         }
 
-      //   bool operator <=( const SelfType &other ) const
-      //   {
-      //      return !other.isLess( *this );
-      //   }
+      protected:
+         Value &deref() const;
 
-      //   bool operator >=( const SelfType &other ) const
-      //   {
-      //      return !isLess( other );
-      //   }
+         void increment();
 
-      //   bool operator >( const SelfType &other ) const
-      //   {
-      //      return other.isLess( *this );
-      //   }
+         void decrement();
 
-      //   SelfType &operator++()
-      //   {
-      //      increment();
-      //      return *this;
-      //   }
+         difference_type computeDistance( const SelfType &other ) const;
 
-      //   SelfType operator++( int )
-      //   {
-      //      SelfType temp( *this );
-      //      ++*this;
-      //      return temp;
-      //   }
+         bool isEqual( const SelfType &other ) const;
 
-      //   SelfType &operator--()
-      //   {
-      //      decrement();
-      //      return *this;
-      //   }
+         void copy( const SelfType &other );
 
-      //   SelfType operator--( int )
-      //   {
-      //      SelfType temp( *this );
-      //      --*this;
-      //      return temp;
-      //   }
+      private:
+         ObjectValues::iterator current_;
+      };
 
-      //   SelfType &operator +=( difference_type n )
-      //   {
-      //      advance( n );
-      //      return *this;
-      //   }
+      class const_iterator : public IteratorBase
+      {
+      public:
+         typedef unsigned int size_t;
+         typedef int difference_type;
+         typedef const Value &reference;
+         typedef const Value *pointer;
+         typedef const_iterator SelfType;
 
-      //   SelfType operator +( difference_type n ) const
-      //   {
-      //      SelfType temp( *this );
-      //      return temp += n;
-      //   }
+         const_iterator();
+         explicit const_iterator( const ObjectValues::iterator &current );
+         SelfType &operator =( const IteratorBase &other );
 
-      //   SelfType &operator -=( difference_type n )
-      //   {
-      //      advance( -n );
-      //      return *this;
-      //   }
+         SelfType operator++( int )
+         {
+            SelfType temp( *this );
+            ++*this;
+            return temp;
+         }
 
-      //   SelfType operator -( difference_type n ) const
-      //   {
-      //      SelfType temp( *this );
-      //      return temp -= n;
-      //   }
+         SelfType operator--( int )
+         {
+            SelfType temp( *this );
+            --*this;
+            return temp;
+         }
 
-      //   reference operator[]( difference_type n ) const
-      //   {
-      //      return *( *this + n );
-      //   }
+         SelfType &operator--()
+         {
+            decrement();
+            return *this;
+         }
 
-      //   reference operator *() const
-      //   {
-      //      return deref();
-      //   }
+         SelfType &operator++()
+         {
+            increment();
+            return *this;
+         }
 
-      //   difference_type operator -( const SelfType &other ) const
-      //   {
-      //      return computeDistance( other );
-      //   }
+         reference operator *() const
+         {
+            return deref();
+         }
+      };
 
-      //private:
-      //   const char *deref() const;
+      class iterator : public IteratorBase
+      {
+      public:
+         typedef unsigned int size_t;
+         typedef int difference_type;
+         typedef Value &reference;
+         typedef Value *pointer;
+         typedef iterator SelfType;
 
-      //   void increment();
+         iterator();
+         iterator( const const_iterator &other );
+         iterator( const iterator &other );
+         explicit iterator( const ObjectValues::iterator &current );
 
-      //   void decrement();
+         SelfType &operator =( const SelfType &other );
 
-      //   void advance( difference_type n );
+         SelfType operator++( int )
+         {
+            SelfType temp( *this );
+            ++*this;
+            return temp;
+         }
 
-      //   difference_type computeDistance( const SelfType &other ) const;
+         SelfType operator--( int )
+         {
+            SelfType temp( *this );
+            --*this;
+            return temp;
+         }
 
-      //   bool isEqual( const SelfType &other ) const;
+         SelfType &operator--()
+         {
+            decrement();
+            return *this;
+         }
 
-      //   bool isLess( const SelfType &other ) const;
+         SelfType &operator++()
+         {
+            increment();
+            return *this;
+         }
 
-      //private:
-      //   //ObjectValues::const_iterator begin_;
-      //   //ObjectValues::const_iterator end_;
-      //   ObjectValues::const_iterator current_;
-      //};
+         reference operator *() const
+         {
+            return deref();
+         }
+      };
 
    public:
-
       Value( ValueType type = nullValue );
       Value( Int value );
       Value( UInt value );
@@ -373,6 +379,12 @@ namespace Json {
       std::string getComment( CommentPlacement placement ) const;
 
       std::string toStyledString() const;
+
+      const_iterator begin() const;
+      const_iterator end() const;
+
+      iterator begin();
+      iterator end();
 
    private:
       struct CommentInfo
