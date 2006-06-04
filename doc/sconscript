@@ -13,5 +13,5 @@ if 'doxygen' in env['TOOLS']:
 
     for dir in doc_cmd:
         filename = os.path.split(dir.path)[1]
-        zip_doc_cmd = env.Zip( '#dist/%s.zip' % filename, [env.Dir(dir)] )
+        zip_doc_cmd = env.TarGz( '#dist/%s.tar.gz' % filename, [env.Dir(dir)] )
         env.Alias( 'doc-dist', zip_doc_cmd )

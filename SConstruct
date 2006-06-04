@@ -145,7 +145,7 @@ env.Alias( 'check' )
 
 env.Tool('doxygen')
 env.Tool('substinfile')
-env.Tool('zip')
+env.Tool('targz')
 
 env['JSONCPP_BUILD_DOC'] = ('doc' in COMMAND_LINE_TARGETS) or ('doc-dist' in COMMAND_LINE_TARGETS)
 
