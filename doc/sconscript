@@ -2,16 +2,18 @@ Import( 'env' )
 import os.path
 
 if 'doxygen' in env['TOOLS']:
+    doc_topdir = env['ROOTBUILD_DIR']
     doxyfile = env.SubstInFile( '#doc/doxyfile', 'doxyfile.in',
                                 SUBST_DICT = {
                                     '%JSONCPP_VERSION%' : env['JSONCPP_VERSION'],
                                     '%TOPDIR%' : env.Dir('#').abspath,
-                                    '%DOC_TOPDIR%' : str(env['ROOTBUILD_DIR'])} )
+                                    '%DOC_TOPDIR%' : str(doc_topdir) } )
     doc_cmd = env.Doxygen( doxyfile )
     env.Alias('doc', doc_cmd)
     env.AlwaysBuild(doc_cmd)
 
     for dir in doc_cmd:
         filename = os.path.split(dir.path)[1]
-        zip_doc_cmd = env.TarGz( '#dist/%s.tar.gz' % filename, [env.Dir(dir)] )
+        zip_doc_cmd = env.TarGz( '#dist/%s.tar.gz' % filename, [env.Dir(dir)],
+                                 TARGZ_BASEDIR = doc_topdir )
         env.Alias( 'doc-dist', zip_doc_cmd )
