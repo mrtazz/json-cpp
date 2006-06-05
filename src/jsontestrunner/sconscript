@@ -3,4 +3,4 @@ Import( 'env_testing buildJSONTests' )
 buildJSONTests( env_testing, Split( """
     main.cpp
      """ ),
-    'jsontest' )
+    'jsontestrunner' )

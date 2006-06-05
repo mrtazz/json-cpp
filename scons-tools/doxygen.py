@@ -143,7 +143,7 @@ def DoxyEmitter(source, target, env):
    # add our output locations
    for (k, v) in output_formats.items():
       if data.get("GENERATE_" + k, v[0]) == "YES":
-         targets.append("/".join([out_dir, data.get(k + "_OUTPUT", v[1])]))
+         targets.append(env.Dir( os.path.join(out_dir, data.get(k + "_OUTPUT", v[1]))) )
 
    # don't clobber targets
    for node in targets:

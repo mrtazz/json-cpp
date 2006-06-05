@@ -3,6 +3,7 @@ import os.path
 import sys
 
 JSONCPP_VERSION = '0.1'
+DIST_DIR = '#dist'
 
 options = Options()
 options.Add( EnumOption('platform',
@@ -80,6 +81,11 @@ else:
     print "UNSUPPORTED PLATFORM."
     env.Exit(1)
 
+env.Tool('doxygen')
+env.Tool('substinfile')
+env.Tool('targz')
+env.Tool('srcdist')
+
 env.Append( CPPPATH = ['#include'],
             LIBPATH = lib_dir )
 short_platform = platform
@@ -92,6 +98,15 @@ env['LIB_NAME_SUFFIX'] = '${LIB_PLATFORM}_${LIB_LINK_TYPE}${LIB_CRUNTIME}'  # mu
 env['JSONCPP_VERSION'] = JSONCPP_VERSION
 env['BUILD_DIR'] = env.Dir(build_dir)
 env['ROOTBUILD_DIR'] = env.Dir(rootbuild_dir)
+env['DIST_DIR'] = DIST_DIR
+class SrcDistAdder:
+    def __init__( self, env ):
+        self.env = env
+    def __call__( self, *args, **kw ):
+        apply( self.env.SrcDist, (self.env['SRCDIST_TARGET'],) + args, kw )
+env['SRCDIST_ADD'] = SrcDistAdder( env )
+env['SRCDIST_TARGET'] = os.path.join( DIST_DIR, 'jsoncpp-src-%s.tar.gz' % env['JSONCPP_VERSION'] )
+env['SRCDIST_BUILDER'] = env.TarGz
                       
 env_testing = env.Copy( )
 env_testing.Append( LIBS = ['json_${LIB_NAME_SUFFIX}'] )
@@ -101,6 +116,7 @@ def buildJSONExample( env, target_sources, target_name ):
     env.Append( CPPPATH = ['#'] )
     exe = env.Program( target=target_name,
                        source=target_sources )
+    env['SRCDIST_ADD']( source=[target_sources] )
     global bin_dir
     return env.Install( bin_dir, exe )
 
@@ -114,6 +130,7 @@ def buildLibary( env, target_sources, target_name ):
                                     source=target_sources )
     global lib_dir
     env.Install( lib_dir, static_lib )
+    env['SRCDIST_ADD']( source=[target_sources] )
 
 Export( 'env env_testing buildJSONExample buildLibary buildJSONTests' )
 
@@ -122,6 +139,7 @@ def buildProjectInDirectory( target_directory ):
     target_build_dir = os.path.join( build_dir, target_directory )
     target = os.path.join( target_directory, 'sconscript' )
     SConscript( target, build_dir=target_build_dir, duplicate=0 )
+    env['SRCDIST_ADD']( source=[target] )
 
 
 def runJSONTests_action( target, source = None, env = None ):
@@ -143,11 +161,10 @@ RunJSONTests = ActionFactory(runJSONTests_action, runJSONTests_string )
 
 env.Alias( 'check' )
 
-env.Tool('doxygen')
-env.Tool('substinfile')
-env.Tool('targz')
-
-env['JSONCPP_BUILD_DOC'] = ('doc' in COMMAND_LINE_TARGETS) or ('doc-dist' in COMMAND_LINE_TARGETS)
+srcdist_cmd = env['SRCDIST_ADD']( source = """
+    AUTHORS README SConstruct
+    """.split() )
+env.Alias( 'src-dist', srcdist_cmd )
 
 buildProjectInDirectory( 'src/jsontestrunner' )
 buildProjectInDirectory( 'src/lib_json' )

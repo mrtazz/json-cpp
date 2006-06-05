@@ -53,12 +53,13 @@ if internal_targz:
 
 targzAction = SCons.Action.Action(targz, varlist=['TARGZ_COMPRESSION_LEVEL','TARGZ_BASEDIR'])
 
-TarGzBuilder = SCons.Builder.Builder(action = SCons.Action.Action('$TARGZ_COM', '$TARGZ_COMSTR'),
-                                     source_factory = SCons.Node.FS.Entry,
-                                     source_scanner = SCons.Defaults.DirScanner,
-                                     suffix = '$TARGZ_SUFFIX',
-                                     multi = 1)
-
+def makeBuilder( emitter = None ):
+   return SCons.Builder.Builder(action = SCons.Action.Action('$TARGZ_COM', '$TARGZ_COMSTR'),
+                                source_factory = SCons.Node.FS.Entry,
+                                source_scanner = SCons.Defaults.DirScanner,
+                                suffix = '$TARGZ_SUFFIX',
+                                multi = 1)
+TarGzBuilder = makeBuilder()
 
 def generate(env):
     """Add Builders and construction variables for zip to an Environment.
