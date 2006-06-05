@@ -35,6 +35,18 @@ namespace Json {
                   Value &root,
                   bool collectComments = true );
 
+      /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a> document.
+       * \param document UTF-8 encoded string containing the document to read.
+       * \param root [out] Contains the root value of the document if it was
+       *             successfully parsed.
+       * \param collectComments \c true to collect comment and allow writing them back during
+       *                        serialization, \c false to discard comments.
+       * \return \c true if the document was successfully parsed, \c false if an error occurred.
+       */
+      bool parse( const char *beginDoc, const char *endDoc, 
+                  Value &root,
+                  bool collectComments = true );
+
       /** \brief Returns a user friendly string that list errors in the parsed document.
        * \return Formatted error message with the list of errors with their location in 
        *         the parsed document. An empty string is returned if no error occurred

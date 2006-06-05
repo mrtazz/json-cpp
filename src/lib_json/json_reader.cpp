@@ -46,10 +46,20 @@ Reader::parse( const std::string &document,
                Value &root,
                bool collectComments )
 {
-   collectComments_ = collectComments;
    document_ = document;
-   begin_ = document_.c_str();
-   end_ = begin_ + document_.length();
+   const char *begin = document_.c_str();
+   const char *end = begin + document_.length();
+   return parse( begin, end, root, collectComments );
+}
+
+bool 
+Reader::parse( const char *beginDoc, const char *endDoc, 
+               Value &root,
+               bool collectComments )
+{
+   begin_ = beginDoc;
+   end_ = endDoc;
+   collectComments_ = collectComments;
    current_ = begin_;
    lastValueEnd_ = 0;
    lastValue_ = 0;
