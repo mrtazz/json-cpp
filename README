@@ -17,6 +17,12 @@ Unserialization parsing is user friendly and provides precise error reports.
 JsonCpp uses Scons (http://www.scons.org) as a build system. Scons requires
 python to be installed (http://www.python.org).
 
+You download scons-local distribution from the following url:
+http://sourceforge.net/project/showfiles.php?group_id=30337&package_id=67375
+
+Unzip it in the directory where you found this README file. scons.py Should be 
+at the same level as README.
+
 python scons.py platform=PLTFRM [TARGET]
 where PLTFRM may be one of:
 	suncc Sun C++ (Solaris)
