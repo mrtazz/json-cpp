@@ -112,6 +112,34 @@ ValueIteratorBase::copy( const SelfType &other )
 }
 
 
+Value 
+ValueIteratorBase::key() const
+{
+   const Value::CZString czstring = (*current_).first;
+   if ( czstring.c_str() )
+      return Value( czstring.c_str() );
+   return Value( czstring.index() );
+}
+
+
+Value::UInt 
+ValueIteratorBase::index() const
+{
+   const Value::CZString czstring = (*current_).first;
+   if ( !czstring.c_str() )
+      return czstring.index();
+   return Value::UInt( -1 );
+}
+
+
+const char *
+ValueIteratorBase::memberName() const
+{
+   const char *name = (*current_).first.c_str();
+   return name ? name : "";
+}
+
+
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////

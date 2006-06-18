@@ -72,6 +72,7 @@ namespace Json {
     */
    class JSON_API Value 
    {
+      friend class ValueIteratorBase;
    public:
       typedef std::vector<std::string> Members;
       typedef int Int;
@@ -83,8 +84,8 @@ namespace Json {
       static const Int minInt;
       static const Int maxInt;
       static const UInt maxUInt;
-   private:
 
+   private:
       class CZString 
       {
       public:
@@ -313,6 +314,15 @@ namespace Json {
       {
          return computeDistance( other );
       }
+
+      /// Returns either the index or the member name of the referenced value as a Value.
+      Value key() const;
+
+      /// Returns the index of the referenced Value. -1 if it is not an arrayValue.
+      Value::UInt index() const;
+
+      /// Returns the member name of the referenced Value. "" if it is not an objectValue.
+      const char *memberName() const;
 
    protected:
       Value &deref() const;
