@@ -282,7 +282,7 @@ namespace Json {
          ObjectValues *map_;
       } value_;
       ValueType type_ : 8;
-      bool allocated_ : 1;
+      int allocated_ : 1;     // Notes: if declared as bool, bitfield is useless.
       CommentInfo *comments_;
    };
 
