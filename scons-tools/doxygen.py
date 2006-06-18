@@ -1,3 +1,7 @@
+# Big issue:
+# emitter depends on doxyfile which is generated from doxyfile.in.
+# build fails after cleaning and relaunching the build.
+
 import os
 import os.path
 import glob
@@ -99,10 +103,16 @@ def DoxySourceScan(node, env, path):
    file_patterns = data.get("FILE_PATTERNS", default_file_patterns)
    exclude_patterns = data.get("EXCLUDE_PATTERNS", default_exclude_patterns)
 
+   doxyfile_dir = str( node.dir )
+
+##   print 'running from', os.getcwd()
    for node in data.get("INPUT", []):
-      if os.path.isfile(node):
-         sources.add(node)
-      elif os.path.isdir(node):
+      node_real_path = os.path.normpath( os.path.join( doxyfile_dir, node ) )
+      if os.path.isfile(node_real_path):
+##         print str(node), 'is a file'
+         sources.append(node)
+      elif os.path.isdir(node_real_path):
+##         print str(node), 'is a directory'
          if recursive:
             for root, dirs, files in os.walk(node):
                for f in files:
@@ -113,9 +123,12 @@ def DoxySourceScan(node, env, path):
 
                   if pattern_check and not exclude_check:
                      sources.append(filename)
+##                     print '  adding source', os.path.abspath( filename )
          else:
             for pattern in file_patterns:
-               sources.extend(glob.glob("/".join([node, pattern])))
+               sources.extend(glob.glob(os.path.join( node, pattern)))
+##      else:
+##         print str(node), 'is neither a file nor a directory'
    sources = map( lambda path: env.File(path), sources )
    return sources
 
@@ -135,6 +148,7 @@ def DoxyEmitter(source, target, env):
       "XML": ("NO", "xml"),
    }
 
+##   print '#### DoxyEmitter:', source[0].abspath, os.path.exists( source[0].abspath )
    data = DoxyfileParse(source[0].get_contents())
 
    targets = []
@@ -151,7 +165,8 @@ def DoxyEmitter(source, target, env):
 
    # set up cleaning stuff
    for node in targets:
-      env.Clean(node, node)
+      clean_cmd = env.Clean(node, node)
+      env.Depends( clean_cmd, source )
 
    return (targets, source)
 
@@ -167,7 +182,8 @@ def generate(env):
    )
 
    doxyfile_builder = env.Builder(
-      action = env.Action("cd ${SOURCE.dir}  &&  ${DOXYGEN} ${SOURCE.file}"),
+      action = env.Action("cd ${SOURCE.dir}  &&  ${DOXYGEN} ${SOURCE.file}",
+                          varlist=['$SOURCES']),
       emitter = DoxyEmitter,
       target_factory = env.fs.Entry,
       single_source = True,
