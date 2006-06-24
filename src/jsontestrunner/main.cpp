@@ -1,5 +1,5 @@
 #include <json/json.h>
-//#include <stdexcept>
+#include <algorithm> // sort
 #include <stdio.h>
 
 #if defined(_MSC_VER)  &&  _MSC_VER >= 1310
@@ -65,6 +65,7 @@ printValueTree( FILE *fout, Json::Value &value, const std::string &path = "." )
       {
          fprintf( fout, "%s={}\n", path.c_str() );
          Json::Value::Members members( value.getMemberNames() );
+         std::sort( members.begin(), members.end() );
          std::string suffix = *(path.end()-1) == '.' ? "" : ".";
          for ( Json::Value::Members::iterator it = members.begin(); 
                it != members.end(); 

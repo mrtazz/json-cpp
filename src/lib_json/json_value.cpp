@@ -4,7 +4,6 @@
 #include "assert.h"
 #ifdef JSON_USE_CPPTL
 # include <cpptl/conststring.h>
-# include <cpptl/enumerator.h>
 #endif
 #include <stddef.h>    // size_t
 
@@ -18,6 +17,12 @@ const Value Value::null;
 const Value::Int Value::minInt = Value::Int( ~(Value::UInt(-1)/2) );
 const Value::Int Value::maxInt = Value::Int( Value::UInt(-1)/2 );
 const Value::UInt Value::maxUInt = Value::UInt(-1);
+
+ValueAllocator::~ValueAllocator()
+{
+}
+
+
 
 // A "safe" implementation of strdup. Allow null pointer to be passed. 
 // Also avoid warning on msvc80.
@@ -47,160 +52,20 @@ inline char *safeStringDup( const std::string &str )
    return 0;
 }
 
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// class ValueIteratorBase
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-
-ValueIteratorBase::ValueIteratorBase()
-{
-}
-
-
-ValueIteratorBase::ValueIteratorBase( const Value::ObjectValues::iterator &current )
-   : current_( current )
-{
-}
-
-
-Value &
-ValueIteratorBase::deref() const
-{
-   return current_->second;
-}
-
-
-void 
-ValueIteratorBase::increment()
-{
-   ++current_;
-}
-
-
-void 
-ValueIteratorBase::decrement()
-{
-   --current_;
-}
-
-
-ValueIteratorBase::difference_type 
-ValueIteratorBase::computeDistance( const SelfType &other ) const
-{
-# ifdef JSON_USE_CPPTL_SMALLMAP
-   return current_ - other.current_;
-# else
-   return difference_type( std::distance( current_, other.current_ ) );
-# endif
-}
-
-
-bool 
-ValueIteratorBase::isEqual( const SelfType &other ) const
-{
-   return current_ == other.current_;
-}
-
-
-void 
-ValueIteratorBase::copy( const SelfType &other )
-{
-   current_ = other.current_;
-}
-
-
-Value 
-ValueIteratorBase::key() const
-{
-   const Value::CZString czstring = (*current_).first;
-   if ( czstring.c_str() )
-      return Value( czstring.c_str() );
-   return Value( czstring.index() );
-}
-
-
-Value::UInt 
-ValueIteratorBase::index() const
-{
-   const Value::CZString czstring = (*current_).first;
-   if ( !czstring.c_str() )
-      return czstring.index();
-   return Value::UInt( -1 );
-}
-
-
-const char *
-ValueIteratorBase::memberName() const
-{
-   const char *name = (*current_).first.c_str();
-   return name ? name : "";
-}
-
 
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
-// class ValueConstIterator
+// ValueInternals...
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+# include "json_internalarray.inl"
+# include "json_internalmap.inl"
+#endif // JSON_VALUE_USE_INTERNAL_MAP
 
-ValueConstIterator::ValueConstIterator()
-{
-}
-
-
-ValueConstIterator::ValueConstIterator( const Value::ObjectValues::iterator &current )
-   : ValueIteratorBase( current )
-{
-}
-
-ValueConstIterator &
-ValueConstIterator::operator =( const ValueIteratorBase &other )
-{
-   copy( other );
-   return *this;
-}
-
-
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// class ValueIterator
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-// //////////////////////////////////////////////////////////////////
-
-ValueIterator::ValueIterator()
-{
-}
-
-
-ValueIterator::ValueIterator( const Value::ObjectValues::iterator &current )
-   : ValueIteratorBase( current )
-{
-}
-
-ValueIterator::ValueIterator( const ValueConstIterator &other )
-   : ValueIteratorBase( other )
-{
-}
-
-ValueIterator::ValueIterator( const ValueIterator &other )
-   : ValueIteratorBase( other )
-{
-}
-
-ValueIterator &
-ValueIterator::operator =( const SelfType &other )
-{
-   copy( other );
-   return *this;
-}
-
+# include "json_valueiterator.inl"
 
 
 // //////////////////////////////////////////////////////////////////
@@ -240,6 +105,7 @@ Value::CommentInfo::setComment( const char *text )
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
+# ifndef JSON_VALUE_USE_INTERNAL_MAP
 
 // Notes: index_ indicates if the string was allocated when
 // a string is stored.
@@ -314,6 +180,7 @@ Value::CZString::c_str() const
 {
    return cstr_;
 }
+#endif // ifndef JSON_VALUE_USE_INTERNAL_MAP
 
 
 // //////////////////////////////////////////////////////////////////
@@ -324,11 +191,13 @@ Value::CZString::c_str() const
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
-
 Value::Value( ValueType type )
    : type_( type )
    , comments_( 0 )
    , allocated_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    switch ( type )
    {
@@ -344,10 +213,19 @@ Value::Value( ValueType type )
    case stringValue:
       value_.string_ = 0;
       break;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
    case objectValue:
       value_.map_ = new ObjectValues();
       break;
+#else
+   case arrayValue:
+      value_.array_ = new ValueInternalArray();
+      break;
+   case objectValue:
+      value_.map_ = new ValueInternalMap();
+      break;
+#endif
    case booleanValue:
       value_.bool_ = false;
       break;
@@ -360,6 +238,9 @@ Value::Value( ValueType type )
 Value::Value( Int value )
    : type_( intValue )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.int_ = value;
 }
@@ -368,6 +249,9 @@ Value::Value( Int value )
 Value::Value( UInt value )
    : type_( uintValue )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.uint_ = value;
 }
@@ -375,6 +259,9 @@ Value::Value( UInt value )
 Value::Value( double value )
    : type_( realValue )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.real_ = value;
 }
@@ -383,6 +270,9 @@ Value::Value( const char *value )
    : type_( stringValue )
    , allocated_( true )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.string_ = safeStringDup( value );
 }
@@ -391,6 +281,9 @@ Value::Value( const std::string &value )
    : type_( stringValue )
    , allocated_( true )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.string_ = safeStringDup( value );
 
@@ -400,6 +293,9 @@ Value::Value( const CppTL::ConstString &value )
    : type_( stringValue )
    , allocated_( true )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.string_ = safeStringDup( value );
 }
@@ -408,6 +304,9 @@ Value::Value( const CppTL::ConstString &value )
 Value::Value( bool value )
    : type_( booleanValue )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    value_.bool_ = value;
 }
@@ -416,6 +315,9 @@ Value::Value( bool value )
 Value::Value( const Value &other )
    : type_( other.type_ )
    , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
 {
    switch ( type_ )
    {
@@ -435,11 +337,19 @@ Value::Value( const Value &other )
       else
          value_.string_ = 0;
       break;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
    case objectValue:
       value_.map_ = new ObjectValues( *other.value_.map_ );
-      // @todo for each, reset parent...
       break;
+#else
+   case arrayValue:
+      value_.array_ = new ValueInternalArray( *other.value_.array_ );
+      break;
+   case objectValue:
+      value_.map_ = new ValueInternalMap( *other.value_.map_ );
+      break;
+#endif
    default:
       JSON_ASSERT_UNREACHABLE;
    }
@@ -470,10 +380,19 @@ Value::~Value()
       if ( allocated_ )
          free( value_.string_ );
       break;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
    case objectValue:
       delete value_.map_;
       break;
+#else
+   case arrayValue:
+      delete value_.array_;
+      break;
+   case objectValue:
+      delete value_.map_;
+      break;
+#endif
    default:
       JSON_ASSERT_UNREACHABLE;
    }
@@ -563,6 +482,7 @@ Value::operator <( const Value &other ) const
              || ( other.value_.string_  
                   &&  value_.string_  
                   && strcmp( value_.string_, other.value_.string_ ) < 0 );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
    case objectValue:
       {
@@ -571,6 +491,12 @@ Value::operator <( const Value &other ) const
             return delta < 0;
          return (*value_.map_) < (*other.value_.map_);
       }
+#else
+   case arrayValue:
+      return value_.array_->compare( *(other.value_.array_) ) < 0;
+   case objectValue:
+      return value_.map_->compare( *(other.value_.map_) ) < 0;
+#endif
    default:
       JSON_ASSERT_UNREACHABLE;
    }
@@ -617,10 +543,17 @@ Value::operator ==( const Value &other ) const
              || ( other.value_.string_  
                   &&  value_.string_  
                   && strcmp( value_.string_, other.value_.string_ ) == 0 );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
    case objectValue:
       return value_.map_->size() == other.value_.map_->size()
              && (*value_.map_) == (*other.value_.map_);
+#else
+   case arrayValue:
+      return value_.array_->compare( *(other.value_.array_) ) == 0;
+   case objectValue:
+      return value_.map_->compare( *(other.value_.map_) ) == 0;
+#endif
    default:
       JSON_ASSERT_UNREACHABLE;
    }
@@ -841,6 +774,7 @@ Value::size() const
    case booleanValue:
    case stringValue:
       return 0;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:  // size of the array is highest index + 1
       if ( !value_.map_->empty() )
       {
@@ -851,6 +785,12 @@ Value::size() const
       return 0;
    case objectValue:
       return Int( value_.map_->size() );
+#else
+   case arrayValue:
+      return Int( value_.array_->size() );
+   case objectValue:
+      return Int( value_.map_->size() );
+#endif
    default:
       JSON_ASSERT_UNREACHABLE;
    }
@@ -865,9 +805,19 @@ Value::clear()
 
    switch ( type_ )
    {
-   case arrayValue:  // size of the array is highest index + 1
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
+   case arrayValue:
    case objectValue:
       value_.map_->clear();
+      break;
+#else
+   case arrayValue:
+      value_.array_->clear();
+      break;
+   case objectValue:
+      value_.map_->clear();
+      break;
+#endif
    default:
       break;
    }
@@ -879,6 +829,7 @@ Value::resize( UInt newSize )
    JSON_ASSERT( type_ == nullValue  ||  type_ == arrayValue );
    if ( type_ == nullValue )
       *this = Value( arrayValue );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    UInt oldSize = size();
    if ( newSize == 0 )
       clear();
@@ -890,6 +841,9 @@ Value::resize( UInt newSize )
          value_.map_->erase( index );
       assert( size() == newSize );
    }
+#else
+   value_.array_->resize( newSize );
+#endif
 }
 
 
@@ -899,6 +853,7 @@ Value::operator[]( UInt index )
    JSON_ASSERT( type_ == nullValue  ||  type_ == arrayValue );
    if ( type_ == nullValue )
       *this = Value( arrayValue );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString key( index );
    ObjectValues::iterator it = value_.map_->lower_bound( key );
    if ( it != value_.map_->end()  &&  (*it).first == key )
@@ -907,6 +862,9 @@ Value::operator[]( UInt index )
    ObjectValues::value_type defaultValue( key, null );
    it = value_.map_->insert( it, defaultValue );
    return (*it).second;
+#else
+   return value_.array_->resolveReference( index );
+#endif
 }
 
 
@@ -916,11 +874,16 @@ Value::operator[]( UInt index ) const
    JSON_ASSERT( type_ == nullValue  ||  type_ == arrayValue );
    if ( type_ == nullValue )
       return null;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString key( index );
    ObjectValues::const_iterator it = value_.map_->find( key );
    if ( it == value_.map_->end() )
       return null;
    return (*it).second;
+#else
+   Value *value = value_.array_->find( index );
+   return value ? *value : null;
+#endif
 }
 
 
@@ -930,6 +893,7 @@ Value::operator[]( const char *key )
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
       *this = Value( objectValue );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString actualKey( key, CZString::duplicateOnCopy );
    ObjectValues::iterator it = value_.map_->lower_bound( actualKey );
    if ( it != value_.map_->end()  &&  (*it).first == actualKey )
@@ -939,6 +903,9 @@ Value::operator[]( const char *key )
    it = value_.map_->insert( it, defaultValue );
    Value &value = (*it).second;
    return value;
+#else
+   return value_.map_->resolveReference( key );
+#endif
 }
 
 
@@ -965,11 +932,16 @@ Value::operator[]( const char *key ) const
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
       return null;
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    CZString actualKey( key, CZString::noDuplication );
    ObjectValues::const_iterator it = value_.map_->find( actualKey );
    if ( it == value_.map_->end() )
       return null;
    return (*it).second;
+#else
+   const Value *value = value_.map_->find( key );
+   return value ? *value : null;
+#endif
 }
 
 
@@ -1065,37 +1037,46 @@ Value::getMemberNames() const
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    Members members;
    members.reserve( value_.map_->size() );
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
    ObjectValues::const_iterator it = value_.map_->begin();
    ObjectValues::const_iterator itEnd = value_.map_->end();
    for ( ; it != itEnd; ++it )
       members.push_back( std::string( (*it).first.c_str() ) );
+#else
+   ValueInternalMap::IteratorState it;
+   ValueInternalMap::IteratorState itEnd;
+   value_.map_->makeBeginIterator( it );
+   value_.map_->makeEndIterator( itEnd );
+   for ( ; !ValueInternalMap::equals( it, itEnd ); ValueInternalMap::increment(it) )
+      members.push_back( std::string( ValueInternalMap::key( it ) ) );
+#endif
    return members;
 }
-
-# ifdef JSON_USE_CPPTL
-EnumMemberNames
-Value::enumMemberNames() const
-{
-   if ( type_ == objectValue )
-   {
-      return CppTL::Enum::any(  CppTL::Enum::transform(
-         CppTL::Enum::keys( *(value_.map_), CppTL::Type<const CZString &>() ),
-         MemberNamesTransform() ) );
-   }
-   return EnumMemberNames();
-}
-
-
-EnumValues 
-Value::enumValues() const
-{
-   if ( type_ == objectValue  ||  type_ == arrayValue )
-      return CppTL::Enum::anyValues( *(value_.map_), 
-                                     CppTL::Type<const Value &>() );
-   return EnumValues();
-}
-
-# endif
+//
+//# ifdef JSON_USE_CPPTL
+//EnumMemberNames
+//Value::enumMemberNames() const
+//{
+//   if ( type_ == objectValue )
+//   {
+//      return CppTL::Enum::any(  CppTL::Enum::transform(
+//         CppTL::Enum::keys( *(value_.map_), CppTL::Type<const CZString &>() ),
+//         MemberNamesTransform() ) );
+//   }
+//   return EnumMemberNames();
+//}
+//
+//
+//EnumValues 
+//Value::enumValues() const
+//{
+//   if ( type_ == objectValue  ||  type_ == arrayValue )
+//      return CppTL::Enum::anyValues( *(value_.map_), 
+//                                     CppTL::Type<const Value &>() );
+//   return EnumValues();
+//}
+//
+//# endif
 
 
 bool 
@@ -1209,14 +1190,34 @@ Value::begin() const
 {
    switch ( type_ )
    {
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+   case arrayValue:
+      if ( value_.array_ )
+      {
+         ValueInternalArray::IteratorState it;
+         value_.array_->makeBeginIterator( it );
+         return const_iterator( it );
+      }
+      break;
+   case objectValue:
+      if ( value_.map_ )
+      {
+         ValueInternalMap::IteratorState it;
+         value_.map_->makeBeginIterator( it );
+         return const_iterator( it );
+      }
+      break;
+#else
    case arrayValue:
    case objectValue:
       if ( value_.map_ )
          return const_iterator( value_.map_->begin() );
-      // fall through default if no valid map
+      break;
+#endif
    default:
-      return const_iterator();
+      break;
    }
+   return const_iterator();
 }
 
 Value::const_iterator 
@@ -1224,14 +1225,34 @@ Value::end() const
 {
    switch ( type_ )
    {
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+   case arrayValue:
+      if ( value_.array_ )
+      {
+         ValueInternalArray::IteratorState it;
+         value_.array_->makeEndIterator( it );
+         return const_iterator( it );
+      }
+      break;
+   case objectValue:
+      if ( value_.map_ )
+      {
+         ValueInternalMap::IteratorState it;
+         value_.map_->makeEndIterator( it );
+         return const_iterator( it );
+      }
+      break;
+#else
    case arrayValue:
    case objectValue:
       if ( value_.map_ )
          return const_iterator( value_.map_->end() );
-      // fall through default if no valid map
+      break;
+#endif
    default:
-      return const_iterator();
+      break;
    }
+   return const_iterator();
 }
 
 
@@ -1240,14 +1261,34 @@ Value::begin()
 {
    switch ( type_ )
    {
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+   case arrayValue:
+      if ( value_.array_ )
+      {
+         ValueInternalArray::IteratorState it;
+         value_.array_->makeBeginIterator( it );
+         return iterator( it );
+      }
+      break;
+   case objectValue:
+      if ( value_.map_ )
+      {
+         ValueInternalMap::IteratorState it;
+         value_.map_->makeBeginIterator( it );
+         return iterator( it );
+      }
+      break;
+#else
    case arrayValue:
    case objectValue:
       if ( value_.map_ )
          return iterator( value_.map_->begin() );
-      // fall through default if no valid map
+      break;
+#endif
    default:
-      return iterator();
+      break;
    }
+   return iterator();
 }
 
 Value::iterator 
@@ -1255,14 +1296,34 @@ Value::end()
 {
    switch ( type_ )
    {
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+   case arrayValue:
+      if ( value_.array_ )
+      {
+         ValueInternalArray::IteratorState it;
+         value_.array_->makeEndIterator( it );
+         return iterator( it );
+      }
+      break;
+   case objectValue:
+      if ( value_.map_ )
+      {
+         ValueInternalMap::IteratorState it;
+         value_.map_->makeEndIterator( it );
+         return iterator( it );
+      }
+      break;
+#else
    case arrayValue:
    case objectValue:
       if ( value_.map_ )
          return iterator( value_.map_->end() );
-      // fall through default if no valid map
+      break;
+#endif
    default:
-      return iterator();
+      break;
    }
+   return iterator();
 }
 
 

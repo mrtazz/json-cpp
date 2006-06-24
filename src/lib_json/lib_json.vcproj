@@ -176,10 +176,19 @@
 			RelativePath="..\..\include\json\json.h">
 		</File>
 		<File
+			RelativePath=".\json_internalarray.inl">
+		</File>
+		<File
+			RelativePath=".\json_internalmap.inl">
+		</File>
+		<File
 			RelativePath=".\json_reader.cpp">
 		</File>
 		<File
 			RelativePath=".\json_value.cpp">
+		</File>
+		<File
+			RelativePath=".\json_valueiterator.inl">
 		</File>
 		<File
 			RelativePath=".\json_writer.cpp">

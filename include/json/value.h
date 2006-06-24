@@ -73,12 +73,17 @@ namespace Json {
    class JSON_API Value 
    {
       friend class ValueIteratorBase;
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+      friend class ValueInternalLink;
+      friend class ValueInternalMap;
+# endif
    public:
       typedef std::vector<std::string> Members;
       typedef int Int;
       typedef unsigned int UInt;
       typedef ValueIterator iterator;
       typedef ValueConstIterator const_iterator;
+      typedef UInt ArrayIndex;
 
       static const Value null;
       static const Int minInt;
@@ -86,6 +91,7 @@ namespace Json {
       static const UInt maxUInt;
 
    private:
+# ifndef JSON_VALUE_USE_INTERNAL_MAP
       class CZString 
       {
       public:
@@ -111,11 +117,12 @@ namespace Json {
       };
 
    public:
-# ifndef JSON_USE_CPPTL_SMALLMAP
+#  ifndef JSON_USE_CPPTL_SMALLMAP
       typedef std::map<CZString, Value> ObjectValues;
-# else
+#  else
       typedef CppTL::SmallMap<CZString, Value> ObjectValues;
-# endif
+#  endif // ifndef JSON_USE_CPPTL_SMALLMAP
+# endif // ifndef JSON_VALUE_USE_INTERNAL_MAP
 
    public:
       Value( ValueType type = nullValue );
@@ -232,10 +239,10 @@ namespace Json {
       // Returns a list of the member names.
       Members getMemberNames() const;
 
-# ifdef JSON_USE_CPPTL
-      EnumMemberNames enumMemberNames() const;
-      EnumValues enumValues() const;
-# endif
+//# ifdef JSON_USE_CPPTL
+//      EnumMemberNames enumMemberNames() const;
+//      EnumValues enumValues() const;
+//# endif
 
       void setComment( const char *comment,
                        CommentPlacement placement );
@@ -253,6 +260,19 @@ namespace Json {
       iterator end();
 
    private:
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+      inline bool isItemAvailable() const
+      {
+         return itemIsUsed_ == 0;
+      }
+
+      inline void setItemUsed( bool isUsed = true )
+      {
+         itemIsUsed_ = isUsed ? 1 : 0;
+      }
+# endif // # ifdef JSON_VALUE_USE_INTERNAL_MAP
+
+   private:
       struct CommentInfo
       {
          CommentInfo();
@@ -263,14 +283,14 @@ namespace Json {
          char *comment_;
       };
 
-      struct MemberNamesTransform
-      {
-         typedef const char *result_type;
-         const char *operator()( const CZString &name ) const
-         {
-            return name.c_str();
-         }
-      };
+      //struct MemberNamesTransform
+      //{
+      //   typedef const char *result_type;
+      //   const char *operator()( const CZString &name ) const
+      //   {
+      //      return name.c_str();
+      //   }
+      //};
 
       union ValueHolder
       {
@@ -279,171 +299,20 @@ namespace Json {
          double real_;
          bool bool_;
          char *string_;
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+         ValueInternalArray *array_;
+         ValueInternalMap *map_;
+#else
          ObjectValues *map_;
+# endif
       } value_;
       ValueType type_ : 8;
       int allocated_ : 1;     // Notes: if declared as bool, bitfield is useless.
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+      unsigned int itemIsUsed_ : 1;      // used by the ValueInternalMap container.
+# endif
       CommentInfo *comments_;
    };
-
-
-   /** \brief Experimental and untested: base class for Value iterators.
-    *
-    */
-   class ValueIteratorBase
-   {
-   public:
-      typedef unsigned int size_t;
-      typedef int difference_type;
-      typedef ValueIteratorBase SelfType;
-
-      ValueIteratorBase();
-      explicit ValueIteratorBase( const Value::ObjectValues::iterator &current );
-
-      bool operator ==( const SelfType &other ) const
-      {
-         return isEqual( other );
-      }
-
-      bool operator !=( const SelfType &other ) const
-      {
-         return !isEqual( other );
-      }
-
-      difference_type operator -( const SelfType &other ) const
-      {
-         return computeDistance( other );
-      }
-
-      /// Returns either the index or the member name of the referenced value as a Value.
-      Value key() const;
-
-      /// Returns the index of the referenced Value. -1 if it is not an arrayValue.
-      Value::UInt index() const;
-
-      /// Returns the member name of the referenced Value. "" if it is not an objectValue.
-      const char *memberName() const;
-
-   protected:
-      Value &deref() const;
-
-      void increment();
-
-      void decrement();
-
-      difference_type computeDistance( const SelfType &other ) const;
-
-      bool isEqual( const SelfType &other ) const;
-
-      void copy( const SelfType &other );
-
-   private:
-      Value::ObjectValues::iterator current_;
-   };
-
-   /** \brief Experimental and untested: const iterator for object and array value.
-    *
-    */
-   class ValueConstIterator : public ValueIteratorBase
-   {
-   public:
-      typedef unsigned int size_t;
-      typedef int difference_type;
-      typedef const Value &reference;
-      typedef const Value *pointer;
-      typedef ValueConstIterator SelfType;
-
-      ValueConstIterator();
-      /*! \internal Use by Value to create an iterator.
-       */
-      explicit ValueConstIterator( const Value::ObjectValues::iterator &current );
-      SelfType &operator =( const ValueIteratorBase &other );
-
-      SelfType operator++( int )
-      {
-         SelfType temp( *this );
-         ++*this;
-         return temp;
-      }
-
-      SelfType operator--( int )
-      {
-         SelfType temp( *this );
-         --*this;
-         return temp;
-      }
-
-      SelfType &operator--()
-      {
-         decrement();
-         return *this;
-      }
-
-      SelfType &operator++()
-      {
-         increment();
-         return *this;
-      }
-
-      reference operator *() const
-      {
-         return deref();
-      }
-   };
-
-
-   /** \brief Experimental and untested: iterator for object and array value.
-    */
-   class ValueIterator : public ValueIteratorBase
-   {
-   public:
-      typedef unsigned int size_t;
-      typedef int difference_type;
-      typedef Value &reference;
-      typedef Value *pointer;
-      typedef ValueIterator SelfType;
-
-      ValueIterator();
-      ValueIterator( const ValueConstIterator &other );
-      ValueIterator( const ValueIterator &other );
-      /*! \internal Use by Value to create an iterator.
-       */
-      explicit ValueIterator( const Value::ObjectValues::iterator &current );
-
-      SelfType &operator =( const SelfType &other );
-
-      SelfType operator++( int )
-      {
-         SelfType temp( *this );
-         ++*this;
-         return temp;
-      }
-
-      SelfType operator--( int )
-      {
-         SelfType temp( *this );
-         --*this;
-         return temp;
-      }
-
-      SelfType &operator--()
-      {
-         decrement();
-         return *this;
-      }
-
-      SelfType &operator++()
-      {
-         increment();
-         return *this;
-      }
-
-      reference operator *() const
-      {
-         return deref();
-      }
-   };
-
 
 
    /** \brief Experimental and untested: represents an element of the "path" to access a node.
@@ -512,6 +381,418 @@ namespace Json {
 
       Args args_;
    };
+
+
+   class ValueAllocator
+   {
+   public:
+      enum { unknown = -1 };
+
+      virtual ~ValueAllocator();
+
+      virtual char *makeMemberName() = 0;
+      virtual void releaseMemberName() = 0;
+      virtual char *duplicateValue( const char *value, unsigned int length = unknown ) = 0;
+      virtual void releaseValue( char *value ) = 0;
+   };
+
+#ifdef JSON_VALUE_USE_INTERNAL_MAP
+   /** \brief Allocator to customize Value internal map.
+    */ 
+   class JSON_API ValueMapAllocator
+   {
+   public:
+      virtual ~ValueMapAllocator();
+
+      virtual ValueInternalLink *allocateBuckets( unsigned int size ) = 0;
+      virtual void releaseBuckets( ValueInternalLink *links ) = 0;
+      virtual ValueInternalLink *allocateLink() = 0;
+      virtual void releaseLink( ValueInternalLink *link ) = 0;
+   };
+
+   /** \brief Link of hash-map used to store arrayValue and objectValue.
+    * \internal previous_ & next_ allows for bidirectional traversal.
+    */
+   class JSON_API ValueInternalLink
+   {
+   public:
+      enum { itemPerLink = 6 };  // sizeof(ValueInternalLink) = 128 on 32 bits architecture.
+      enum InternalFlags { 
+         flagAvailable = 0,
+         flagUsed = 1
+      };
+
+      ValueInternalLink()
+         : previous_( 0 )
+         , next_( 0 )
+      {
+      }
+
+      ~ValueInternalLink()
+      { // assumes there is only memberName
+         for ( int index =0; index < itemPerLink; ++index )
+         {
+            if ( !items_[index].isItemAvailable() )
+               free( keys_[index] );
+            else
+               break;
+         }
+      }
+
+      Value items_[itemPerLink];
+      char *keys_[itemPerLink];
+      ValueInternalLink *previous_;
+      ValueInternalLink *next_;
+   };
+
+
+   class JSON_API ValueInternalMap
+   {
+      friend class ValueIteratorBase;
+      friend class Value;
+   public:
+      typedef unsigned int HashKey;
+      typedef unsigned int BucketIndex;
+
+      struct IteratorState
+      {
+         ValueInternalMap *map_;
+         ValueInternalLink *link_;
+         BucketIndex itemIndex_;
+         BucketIndex bucketIndex_;
+      };
+
+      /* When the bucket is allocated, one page is immediately allocated for each bucket.
+         Each bucket is made up of a chained list of ValueInternalLink. The last
+         link of a given bucket can be found in the 'previous_' field of the following bucket.
+         The last link of the last bucket is stored in tailLink_ as it has no following bucket.
+         Only the last link of a bucket may contains 'available' item. The last link always
+         contains at least one element unless is it the bucket one very first link.
+      */
+
+      ValueInternalMap();
+      ValueInternalMap( const ValueInternalMap &other );
+      ValueInternalMap &operator =( const ValueInternalMap &other );
+      ~ValueInternalMap();
+
+      void swap( ValueInternalMap &other );
+
+      BucketIndex size() const;
+
+      void clear();
+
+      bool reserveDelta( BucketIndex growth );
+
+      bool reserve( BucketIndex newItemCount );
+
+      const Value *find( const char *key ) const;
+
+      Value *find( const char *key );
+
+      Value &resolveReference( const char *key );
+
+      void remove( const char *key );
+
+      void doActualRemove( ValueInternalLink *link, 
+                           BucketIndex index,
+                           BucketIndex bucketIndex );
+
+      ValueInternalLink *&getLastLinkInBucket( BucketIndex bucketIndex );
+
+      Value &setNewItem( const char *key, ValueInternalLink *link, BucketIndex index );
+
+      Value &unsafeAdd( const char *key, HashKey hashedKey );
+
+      HashKey hash( const char *key ) const;
+
+      int compare( const ValueInternalMap &other ) const;
+
+   private:
+      void makeBeginIterator( IteratorState &it ) const;
+      void makeEndIterator( IteratorState &it ) const;
+      static bool equals( const IteratorState &x, const IteratorState &other );
+      static void increment( IteratorState &iterator );
+      static void incrementBucket( IteratorState &iterator );
+      static void decrement( IteratorState &iterator );
+      static const char *key( const IteratorState &iterator );
+      static Value &value( const IteratorState &iterator );
+      static int distance( const IteratorState &x, const IteratorState &y );
+
+   private:
+      ValueInternalLink *buckets_;
+      ValueInternalLink *tailLink_;
+      BucketIndex bucketsSize_;
+      BucketIndex itemCount_;
+   };
+
+   /** \brief A simplified deque implementation used internally by Value.
+   * \internal
+   * It is based on a list of fixed "page", each page contains a fixed number of items.
+   * Instead of using a linked-list, a array of pointer is used for fast item look-up.
+   * Look-up for an element is as follow:
+   * - compute page index: pageIndex = itemIndex / itemsPerPage
+   * - look-up item in page: pages_[pageIndex][itemIndex % itemsPerPage]
+   *
+   * Insertion is amortized constant time (only the array containing the index of pointers
+   * need to be reallocated when items are appended).
+   */
+   class JSON_API ValueInternalArray
+   {
+      friend class Value;
+      friend class ValueIteratorBase;
+   public:
+      enum { itemsPerPage = 8 };    // should be a power of 2 for fast divide and modulo.
+      typedef Value::ArrayIndex ArrayIndex;
+      typedef unsigned int PageIndex;
+
+      struct IteratorState // Must be a POD
+      {
+         ValueInternalArray *array_;
+         Value **currentPageIndex_;
+         unsigned int currentItemIndex_;
+      };
+
+      ValueInternalArray();
+      ValueInternalArray( const ValueInternalArray &other );
+      ValueInternalArray &operator =( const ValueInternalArray &other );
+      ~ValueInternalArray();
+      void swap( ValueInternalArray &other );
+
+      void clear();
+      void resize( ArrayIndex newSize );
+
+      Value &resolveReference( ArrayIndex index );
+
+      Value *find( ArrayIndex index ) const;
+
+      ArrayIndex size() const;
+
+      int compare( const ValueInternalArray &other ) const;
+
+   private:
+      static bool equals( const IteratorState &x, const IteratorState &other );
+      static void increment( IteratorState &iterator );
+      static void decrement( IteratorState &iterator );
+      static Value &dereference( const IteratorState &iterator );
+      static Value &unsafeDereference( const IteratorState &iterator );
+      static int distance( const IteratorState &x, const IteratorState &y );
+      static ArrayIndex indexOf( const IteratorState &iterator );
+      void makeBeginIterator( IteratorState &it ) const;
+      void makeEndIterator( IteratorState &it ) const;
+      void makeIterator( IteratorState &it, ArrayIndex index ) const;
+
+      void makeIndexValid( ArrayIndex index );
+
+      Value **pages_;
+      ArrayIndex size_;
+      PageIndex pageCount_;
+   };
+
+   /** \brief Allocator to customize Value internal array.
+    */ 
+   class JSON_API ValueArrayAllocator
+   {
+   public:
+      virtual ~ValueArrayAllocator();
+
+      virtual void reallocateArrayPageIndex( Value **&indexes, 
+                                             ValueInternalArray::PageIndex &indexCount,
+                                             ValueInternalArray::PageIndex minNewIndexCount ) = 0;
+      virtual void releaseArrayPageIndex( Value **indexes, 
+                                          ValueInternalArray::PageIndex indexCount ) = 0;
+      virtual Value *allocateArrayPage() = 0;
+      virtual void releaseArrayPage( Value *value ) = 0;
+   };
+#endif // #ifdef JSON_VALUE_USE_INTERNAL_MAP
+
+
+   /** \brief Experimental and untested: base class for Value iterators.
+    *
+    */
+   class ValueIteratorBase
+   {
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef ValueIteratorBase SelfType;
+
+      ValueIteratorBase();
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
+      explicit ValueIteratorBase( const Value::ObjectValues::iterator &current );
+#else
+      ValueIteratorBase( const ValueInternalArray::IteratorState &state );
+      ValueIteratorBase( const ValueInternalMap::IteratorState &state );
+#endif
+
+      bool operator ==( const SelfType &other ) const
+      {
+         return isEqual( other );
+      }
+
+      bool operator !=( const SelfType &other ) const
+      {
+         return !isEqual( other );
+      }
+
+      difference_type operator -( const SelfType &other ) const
+      {
+         return computeDistance( other );
+      }
+
+      /// Returns either the index or the member name of the referenced value as a Value.
+      Value key() const;
+
+      /// Returns the index of the referenced Value. -1 if it is not an arrayValue.
+      Value::UInt index() const;
+
+      /// Returns the member name of the referenced Value. "" if it is not an objectValue.
+      const char *memberName() const;
+
+   protected:
+      Value &deref() const;
+
+      void increment();
+
+      void decrement();
+
+      difference_type computeDistance( const SelfType &other ) const;
+
+      bool isEqual( const SelfType &other ) const;
+
+      void copy( const SelfType &other );
+
+   private:
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
+      Value::ObjectValues::iterator current_;
+#else
+      union
+      {
+         ValueInternalArray::IteratorState array_;
+         ValueInternalMap::IteratorState map_;
+      } iterator_;
+      bool isArray_;
+#endif
+   };
+
+   /** \brief Experimental and untested: const iterator for object and array value.
+    *
+    */
+   class ValueConstIterator : public ValueIteratorBase
+   {
+      friend class Value;
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef const Value &reference;
+      typedef const Value *pointer;
+      typedef ValueConstIterator SelfType;
+
+      ValueConstIterator();
+   private:
+      /*! \internal Use by Value to create an iterator.
+       */
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
+      explicit ValueConstIterator( const Value::ObjectValues::iterator &current );
+#else
+      ValueConstIterator( const ValueInternalArray::IteratorState &state );
+      ValueConstIterator( const ValueInternalMap::IteratorState &state );
+#endif
+   public:
+      SelfType &operator =( const ValueIteratorBase &other );
+
+      SelfType operator++( int )
+      {
+         SelfType temp( *this );
+         ++*this;
+         return temp;
+      }
+
+      SelfType operator--( int )
+      {
+         SelfType temp( *this );
+         --*this;
+         return temp;
+      }
+
+      SelfType &operator--()
+      {
+         decrement();
+         return *this;
+      }
+
+      SelfType &operator++()
+      {
+         increment();
+         return *this;
+      }
+
+      reference operator *() const
+      {
+         return deref();
+      }
+   };
+
+
+   /** \brief Experimental and untested: iterator for object and array value.
+    */
+   class ValueIterator : public ValueIteratorBase
+   {
+      friend class Value;
+   public:
+      typedef unsigned int size_t;
+      typedef int difference_type;
+      typedef Value &reference;
+      typedef Value *pointer;
+      typedef ValueIterator SelfType;
+
+      ValueIterator();
+      ValueIterator( const ValueConstIterator &other );
+      ValueIterator( const ValueIterator &other );
+   private:
+      /*! \internal Use by Value to create an iterator.
+       */
+#ifndef JSON_VALUE_USE_INTERNAL_MAP
+      explicit ValueIterator( const Value::ObjectValues::iterator &current );
+#else
+      ValueIterator( const ValueInternalArray::IteratorState &state );
+      ValueIterator( const ValueInternalMap::IteratorState &state );
+#endif
+   public:
+
+      SelfType &operator =( const SelfType &other );
+
+      SelfType operator++( int )
+      {
+         SelfType temp( *this );
+         ++*this;
+         return temp;
+      }
+
+      SelfType operator--( int )
+      {
+         SelfType temp( *this );
+         --*this;
+         return temp;
+      }
+
+      SelfType &operator--()
+      {
+         decrement();
+         return *this;
+      }
+
+      SelfType &operator++()
+      {
+         increment();
+         return *this;
+      }
+
+      reference operator *() const
+      {
+         return deref();
+      }
+   };
+
 
 } // namespace Json
 

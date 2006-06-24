@@ -6,7 +6,12 @@
 
 /// If defined, indicates that json may leverage CppTL library
 //#  define JSON_USE_CPPTL 1
+/// If defined, indicates that cpptl vector based map should be used instead of std::map
+/// as Value container.
 //#  define JSON_USE_CPPTL_SMALLMAP 1
+/// If defined, indicates that Json specific container should be used
+/// (hash table & simple deque container with customizable allocator).
+//#  define JSON_VALUE_USE_INTERNAL_MAP 1
 
 
 # ifdef JSON_IN_CPPTL
