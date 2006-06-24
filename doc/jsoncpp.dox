@@ -22,7 +22,7 @@ Here is an example of JSON data:
         ],
         
     // Tab indent size
-    indent : 3
+    indent : { length : 3, use_space = true }
 }
 \endverbatim
 
@@ -51,20 +51,28 @@ const Json::Value plugins = root["plug-ins"];
 for ( int index = 0; index < plugins.size(); ++index )  // Iterates over the sequence elements.
    loadPlugIn( plugins[index].asString() );
    
-setIndent( root.get("indent", 3).asInt() );
+setIndentLength( root["indent"].get("length", 3).asInt() );
+setIndentUseSpace( root["indent"].get("use_space", true).asBool() );
 
 // ...
 // At application shutdown to make the new configuration document:
 // Since Json::Value has implicit constructor for all value types, it is not
 // necessary to explicitely construct the Json::Value object:
 root["encoding"] = getCurrentEncoding();
-root["indent"] = getCurrentIndent();
+root["indent"]["length"] = getCurrentIndentLength();
+root["indent"]["use_space"] = getCurrentIndentUseSpace();
 
 Json::StyledWriter writer;
 // Make a new JSON document for the configuration. Preserve original comments.
 std::string outputConfig = writer.write( root );
 \endcode
 
+\section _plinks Build instructions
+The build instruction are located in the file 
+<a HREF="README.txt">README.txt</a> in the top-directory of the project.
+
+Permanent link to the lastest revision of the file in subversion: 
+<a HREF="http://svn.sourceforge.net/viewcvs.cgi/jsoncpp/README.txt?view=markup">lastest README.txt</a>
 
 \section _plinks Project links
 - <a HREF="http://jsoncpp.sourceforge.net">json-cpp home</a>

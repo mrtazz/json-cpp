@@ -32,7 +32,7 @@ where PLTFRM may be one of:
 	msvc70 Microsoft Visual Studio 2002
 	msvc71 Microsoft Visual Studio 2003
 	msvc80 Microsoft Visual Studio 2005
-	linux-gcc Gnu C++ (linux)
+	linux-gcc Gnu C++ (linux, also reported to work for Mac OS X)
 	
 adding platform is fairly simple. You need to change the Sconstruct file 
 to do so.
