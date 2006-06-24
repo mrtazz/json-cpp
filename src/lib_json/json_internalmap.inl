@@ -85,9 +85,10 @@ ValueInternalMap::ValueInternalMap( const ValueInternalMap &other )
    other.makeEndIterator( itEnd );
    for ( ; !equals(it,itEnd); increment(it) )
    {
-      const char *memberName = key( it );
+      bool isStatic;
+      const char *memberName = key( it, isStatic );
       const Value &aValue = value( it );
-      resolveReference(memberName) = aValue;
+      resolveReference(memberName, isStatic) = aValue;
    }
 }
 
@@ -204,7 +205,8 @@ ValueInternalMap::find( const char *key )
 
 
 Value &
-ValueInternalMap::resolveReference( const char *key )
+ValueInternalMap::resolveReference( const char *key,
+                                    bool isStatic )
 {
    HashKey hashedKey = hash( key );
    if ( bucketsSize_ )
@@ -219,7 +221,7 @@ ValueInternalMap::resolveReference( const char *key )
          for ( index=0; index < ValueInternalLink::itemPerLink; ++index )
          {
             if ( current->items_[index].isItemAvailable() )
-               return setNewItem( key, current, index );
+               return setNewItem( key, isStatic, current, index );
             if ( strcmp( key, current->keys_[index] ) == 0 )
                return current->items_[index];
          }
@@ -227,7 +229,7 @@ ValueInternalMap::resolveReference( const char *key )
    }
 
    reserveDelta( 1 );
-   return unsafeAdd( key, hashedKey );
+   return unsafeAdd( key, isStatic, hashedKey );
 }
 
 
@@ -312,18 +314,24 @@ ValueInternalMap::getLastLinkInBucket( BucketIndex bucketIndex )
 
 
 Value &
-ValueInternalMap::setNewItem( const char *key, ValueInternalLink *link, BucketIndex index )
+ValueInternalMap::setNewItem( const char *key, 
+                              bool isStatic,
+                              ValueInternalLink *link, 
+                              BucketIndex index )
 {
    char *duplicatedKey = safeStringDup( key );
    ++itemCount_;
    link->keys_[index] = duplicatedKey;
    link->items_[index].setItemUsed();
+   link->items_[index].setMemberNameIsStatic( isStatic );
    return link->items_[index]; // items already default constructed.
 }
 
 
 Value &
-ValueInternalMap::unsafeAdd( const char *key, HashKey hashedKey )
+ValueInternalMap::unsafeAdd( const char *key, 
+                             bool isStatic, 
+                             HashKey hashedKey )
 {
    JSON_ASSERT_MESSAGE( bucketsSize_ > 0, "ValueInternalMap::unsafeAdd(): internal logic error." );
    BucketIndex bucketIndex = hashedKey % bucketsSize_;
@@ -343,7 +351,7 @@ ValueInternalMap::unsafeAdd( const char *key, HashKey hashedKey )
       previousLink = newLink;
       link = newLink;
    }
-   return setNewItem( key, link, index );
+   return setNewItem( key, isStatic, link, index );
 }
 
 
@@ -472,6 +480,14 @@ const char *
 ValueInternalMap::key( const IteratorState &iterator )
 {
    JSON_ASSERT_MESSAGE( iterator.link_, "Attempting to iterate using invalid iterator." );
+   return iterator.link_->keys_[iterator.itemIndex_];
+}
+
+const char *
+ValueInternalMap::key( const IteratorState &iterator, bool &isStatic )
+{
+   JSON_ASSERT_MESSAGE( iterator.link_, "Attempting to iterate using invalid iterator." );
+   isStatic = iterator.link_->items_[iterator.itemIndex_].isMemberNameStatic();
    return iterator.link_->keys_[iterator.itemIndex_];
 }
 

@@ -38,10 +38,46 @@ namespace Json {
       numberOfCommentPlacement
    };
 
-# ifdef JSON_USE_CPPTL
-   typedef CppTL::AnyEnumerator<const char *> EnumMemberNames;
-   typedef CppTL::AnyEnumerator<const Value &> EnumValues;
-# endif
+//# ifdef JSON_USE_CPPTL
+//   typedef CppTL::AnyEnumerator<const char *> EnumMemberNames;
+//   typedef CppTL::AnyEnumerator<const Value &> EnumValues;
+//# endif
+
+   /** \brief Lightweight wrapper to identify static string.
+    *
+    * Value constructor and objectValue member assignement take advantage of the
+    * StaticString and avoid the cost of string duplication when storing the
+    * string or the member name.
+    *
+    * Example of usage:
+    * \code
+    * Json::Value aValue( StaticString("some text") );
+    * Json::Value object;
+    * static const StaticString code("code");
+    * object[code] = 1234;
+    * \endcode
+    */
+   class JSON_API StaticString
+   {
+   public:
+      explicit StaticString( const char *czstring )
+         : str_( czstring )
+      {
+      }
+
+      operator const char *() const
+      {
+         return str_;
+      }
+
+      const char *c_str() const
+      {
+         return str_;
+      }
+
+   private:
+      const char *str_;
+   };
 
    /** \brief Represents a <a HREF="http://www.json.org">JSON</a> value.
     *
@@ -110,6 +146,7 @@ namespace Json {
          bool operator==( const CZString &other ) const;
          int index() const;
          const char *c_str() const;
+         bool isStaticString() const;
       private:
          void swap( CZString &other );
          const char *cstr_;
@@ -130,6 +167,16 @@ namespace Json {
       Value( UInt value );
       Value( double value );
       Value( const char *value );
+      /** \brief Constructs a value from a static string.
+       * Like other value string constructor but do not duplicate the string for
+       * internal storage. The given string must remain alive after the call to this
+       * constructor.
+       * Example of usage:
+       * \code
+       * Json::Value aValue( StaticString("some text") );
+       * \endcode
+       */
+      Value( const StaticString &value );
       Value( const std::string &value );
 # ifdef JSON_USE_CPPTL
       Value( const CppTL::ConstString &value );
@@ -202,18 +249,29 @@ namespace Json {
       /// Equivalent to jsonvalue[jsonvalue.size()] = value;
       Value &append( const Value &value );
 
-      // Access an object value by name, create a null member if it does not exist.
+      /// Access an object value by name, create a null member if it does not exist.
       Value &operator[]( const char *key );
-      // Access an object value by name, returns null if there is no member with that name.
+      /// Access an object value by name, returns null if there is no member with that name.
       const Value &operator[]( const char *key ) const;
-      // Access an object value by name, create a null member if it does not exist.
+      /// Access an object value by name, create a null member if it does not exist.
       Value &operator[]( const std::string &key );
-      // Access an object value by name, returns null if there is no member with that name.
+      /// Access an object value by name, returns null if there is no member with that name.
       const Value &operator[]( const std::string &key ) const;
+      /** \brief Access an object value by name, create a null member if it does not exist.
+       * If the object as no entry for that name, then the member name used to store
+       * the new entry is not duplicated.
+       * Example of use:
+       * \code
+       * Json::Value object;
+       * static const StaticString code("code");
+       * object[code] = 1234;
+       * \endcode
+       */
+      Value &operator[]( const StaticString &key );
 # ifdef JSON_USE_CPPTL
-      // Access an object value by name, create a null member if it does not exist.
+      /// Access an object value by name, create a null member if it does not exist.
       Value &operator[]( const CppTL::ConstString &key );
-      // Access an object value by name, returns null if there is no member with that name.
+      /// Access an object value by name, returns null if there is no member with that name.
       const Value &operator[]( const CppTL::ConstString &key ) const;
 # endif
       /// Returns the member named key if it exist, defaultValue otherwise.
@@ -260,6 +318,9 @@ namespace Json {
       iterator end();
 
    private:
+      Value &resolveReference( const char *key, 
+                               bool isStatic );
+
 # ifdef JSON_VALUE_USE_INTERNAL_MAP
       inline bool isItemAvailable() const
       {
@@ -269,6 +330,16 @@ namespace Json {
       inline void setItemUsed( bool isUsed = true )
       {
          itemIsUsed_ = isUsed ? 1 : 0;
+      }
+
+      inline bool isMemberNameStatic() const
+      {
+         return memberNameIsStatic_ == 0;
+      }
+
+      inline void setMemberNameIsStatic( bool isStatic )
+      {
+         memberNameIsStatic_ = isStatic ? 1 : 0;
       }
 # endif // # ifdef JSON_VALUE_USE_INTERNAL_MAP
 
@@ -310,6 +381,7 @@ namespace Json {
       int allocated_ : 1;     // Notes: if declared as bool, bitfield is useless.
 # ifdef JSON_VALUE_USE_INTERNAL_MAP
       unsigned int itemIsUsed_ : 1;      // used by the ValueInternalMap container.
+      int memberNameIsStatic_ : 1;       // used by the ValueInternalMap container.
 # endif
       CommentInfo *comments_;
    };
@@ -391,7 +463,7 @@ namespace Json {
       virtual ~ValueAllocator();
 
       virtual char *makeMemberName() = 0;
-      virtual void releaseMemberName() = 0;
+      virtual void releaseMemberName( char * ) = 0;
       virtual char *duplicateValue( const char *value, unsigned int length = unknown ) = 0;
       virtual void releaseValue( char *value ) = 0;
    };
@@ -429,11 +501,14 @@ namespace Json {
       }
 
       ~ValueInternalLink()
-      { // assumes there is only memberName
+      { 
          for ( int index =0; index < itemPerLink; ++index )
          {
             if ( !items_[index].isItemAvailable() )
-               free( keys_[index] );
+            {
+               if ( !items_[index].isMemberNameStatic() )
+                  free( keys_[index] );
+            }
             else
                break;
          }
@@ -489,7 +564,8 @@ namespace Json {
 
       Value *find( const char *key );
 
-      Value &resolveReference( const char *key );
+      Value &resolveReference( const char *key, 
+                               bool isStatic );
 
       void remove( const char *key );
 
@@ -499,9 +575,14 @@ namespace Json {
 
       ValueInternalLink *&getLastLinkInBucket( BucketIndex bucketIndex );
 
-      Value &setNewItem( const char *key, ValueInternalLink *link, BucketIndex index );
+      Value &setNewItem( const char *key, 
+                         bool isStatic, 
+                         ValueInternalLink *link, 
+                         BucketIndex index );
 
-      Value &unsafeAdd( const char *key, HashKey hashedKey );
+      Value &unsafeAdd( const char *key, 
+                        bool isStatic, 
+                        HashKey hashedKey );
 
       HashKey hash( const char *key ) const;
 
@@ -515,6 +596,7 @@ namespace Json {
       static void incrementBucket( IteratorState &iterator );
       static void decrement( IteratorState &iterator );
       static const char *key( const IteratorState &iterator );
+      static const char *key( const IteratorState &iterator, bool &isStatic );
       static Value &value( const IteratorState &iterator );
       static int distance( const IteratorState &x, const IteratorState &y );
 

@@ -180,6 +180,13 @@ Value::CZString::c_str() const
 {
    return cstr_;
 }
+
+bool 
+Value::CZString::isStaticString() const
+{
+   return index_ == noDuplication;
+}
+
 #endif // ifndef JSON_VALUE_USE_INTERNAL_MAP
 
 
@@ -288,6 +295,19 @@ Value::Value( const std::string &value )
    value_.string_ = safeStringDup( value );
 
 }
+
+Value::Value( const StaticString &value )
+   : type_( stringValue )
+   , allocated_( false )
+   , comments_( 0 )
+# ifdef JSON_VALUE_USE_INTERNAL_MAP
+   , itemIsUsed_( 0 )
+#endif
+{
+   value_.string_ = const_cast<char *>( value.c_str() );
+}
+
+
 # ifdef JSON_USE_CPPTL
 Value::Value( const CppTL::ConstString &value )
    : type_( stringValue )
@@ -890,11 +910,20 @@ Value::operator[]( UInt index ) const
 Value &
 Value::operator[]( const char *key )
 {
+   return resolveReference( key, false );
+}
+
+
+Value &
+Value::resolveReference( const char *key, 
+                         bool isStatic )
+{
    JSON_ASSERT( type_ == nullValue  ||  type_ == objectValue );
    if ( type_ == nullValue )
       *this = Value( objectValue );
 #ifndef JSON_VALUE_USE_INTERNAL_MAP
-   CZString actualKey( key, CZString::duplicateOnCopy );
+   CZString actualKey( key, isStatic ? CZString::noDuplication 
+                                     : CZString::duplicateOnCopy );
    ObjectValues::iterator it = value_.map_->lower_bound( actualKey );
    if ( it != value_.map_->end()  &&  (*it).first == actualKey )
       return (*it).second;
@@ -904,7 +933,7 @@ Value::operator[]( const char *key )
    Value &value = (*it).second;
    return value;
 #else
-   return value_.map_->resolveReference( key );
+   return value_.map_->resolveReference( key, isStatic );
 #endif
 }
 
@@ -956,6 +985,12 @@ const Value &
 Value::operator[]( const std::string &key ) const
 {
    return (*this)[ key.c_str() ];
+}
+
+Value &
+Value::operator[]( const StaticString &key )
+{
+   return resolveReference( key, true );
 }
 
 

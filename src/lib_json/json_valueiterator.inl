@@ -123,12 +123,20 @@ ValueIteratorBase::key() const
 #ifndef JSON_VALUE_USE_INTERNAL_MAP
    const Value::CZString czstring = (*current_).first;
    if ( czstring.c_str() )
+   {
+      if ( czstring.isStaticString() )
+         return Value( StaticString( czstring.c_str() ) );
       return Value( czstring.c_str() );
+   }
    return Value( czstring.index() );
 #else
    if ( isArray_ )
       return Value( ValueInternalArray::indexOf( iterator_.array_ ) );
-   return Value( ValueInternalMap::key( iterator_.map_ ) );
+   bool isStatic;
+   const char *memberName = ValueInternalMap::key( iterator_.map_, isStatic );
+   if ( isStatic )
+      return Value( StaticString( memberName ) );
+   return Value( memberName );
 #endif
 }
 

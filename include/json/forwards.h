@@ -10,6 +10,7 @@ namespace Json {
    class StyledWriter;
 
    // value.h
+   class StaticString;
    class Path;
    class PathArgument;
    class Value;
