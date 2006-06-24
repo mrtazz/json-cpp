@@ -470,16 +470,60 @@ namespace Json {
 
 #ifdef JSON_VALUE_USE_INTERNAL_MAP
    /** \brief Allocator to customize Value internal map.
+    * Below is an example of a simple implementation (default implementation actually
+    * use memory pool for speed).
+    * \code
+      class DefaultValueMapAllocator : public ValueMapAllocator
+      {
+      public: // overridden from ValueMapAllocator
+         virtual ValueInternalMap *newMap()
+         {
+            return new ValueInternalMap();
+         }
+
+         virtual ValueInternalMap *newMapCopy( const ValueInternalMap &other )
+         {
+            return new ValueInternalMap( other );
+         }
+
+         virtual void destructMap( ValueInternalMap *map )
+         {
+            delete map;
+         }
+
+         virtual ValueInternalLink *allocateMapBuckets( unsigned int size )
+         {
+            return new ValueInternalLink[size];
+         }
+
+         virtual void releaseMapBuckets( ValueInternalLink *links )
+         {
+            delete [] links;
+         }
+
+         virtual ValueInternalLink *allocateMapLink()
+         {
+            return new ValueInternalLink();
+         }
+
+         virtual void releaseMapLink( ValueInternalLink *link )
+         {
+            delete link;
+         }
+      };
+    * \endcode
     */ 
    class JSON_API ValueMapAllocator
    {
    public:
       virtual ~ValueMapAllocator();
-
-      virtual ValueInternalLink *allocateBuckets( unsigned int size ) = 0;
-      virtual void releaseBuckets( ValueInternalLink *links ) = 0;
-      virtual ValueInternalLink *allocateLink() = 0;
-      virtual void releaseLink( ValueInternalLink *link ) = 0;
+      virtual ValueInternalMap *newMap() = 0;
+      virtual ValueInternalMap *newMapCopy( const ValueInternalMap &other ) = 0;
+      virtual void destructMap( ValueInternalMap *map ) = 0;
+      virtual ValueInternalLink *allocateMapBuckets( unsigned int size ) = 0;
+      virtual void releaseMapBuckets( ValueInternalLink *links ) = 0;
+      virtual ValueInternalLink *allocateMapLink() = 0;
+      virtual void releaseMapLink( ValueInternalLink *link ) = 0;
    };
 
    /** \brief Link of hash-map used to store arrayValue and objectValue.
@@ -494,6 +538,9 @@ namespace Json {
          flagUsed = 1
       };
 
+      /** \internal MUST be safely initialized using memset( this, 0, sizeof(ValueInternalLink) );
+       * This optimization is used by the fast allocator.
+       */
       ValueInternalLink()
          : previous_( 0 )
          , next_( 0 )
@@ -671,12 +718,82 @@ namespace Json {
    };
 
    /** \brief Allocator to customize Value internal array.
+    * Below is an example of a simple implementation (actual implementation use
+    * memory pool).
+      \code
+class DefaultValueArrayAllocator : public ValueArrayAllocator
+{
+public: // overridden from ValueArrayAllocator
+   virtual ~DefaultValueArrayAllocator()
+   {
+   }
+
+   virtual ValueInternalArray *newArray()
+   {
+      return new ValueInternalArray();
+   }
+
+   virtual ValueInternalArray *newArrayCopy( const ValueInternalArray &other )
+   {
+      return new ValueInternalArray( other );
+   }
+
+   virtual void destruct( ValueInternalArray *array )
+   {
+      delete array;
+   }
+
+   virtual void reallocateArrayPageIndex( Value **&indexes, 
+                                          ValueInternalArray::PageIndex &indexCount,
+                                          ValueInternalArray::PageIndex minNewIndexCount )
+   {
+      ValueInternalArray::PageIndex newIndexCount = (indexCount*3)/2 + 1;
+      if ( minNewIndexCount > newIndexCount )
+         newIndexCount = minNewIndexCount;
+      void *newIndexes = realloc( indexes, sizeof(Value*) * newIndexCount );
+      if ( !newIndexes )
+         throw std::bad_alloc();
+      indexCount = newIndexCount;
+      indexes = static_cast<Value **>( newIndexes );
+   }
+   virtual void releaseArrayPageIndex( Value **indexes, 
+                                       ValueInternalArray::PageIndex indexCount )
+   {
+      if ( indexes )
+         free( indexes );
+   }
+
+   virtual Value *allocateArrayPage()
+   {
+      return static_cast<Value *>( malloc( sizeof(Value) * ValueInternalArray::itemsPerPage ) );
+   }
+
+   virtual void releaseArrayPage( Value *value )
+   {
+      if ( value )
+         free( value );
+   }
+};
+      \endcode
     */ 
    class JSON_API ValueArrayAllocator
    {
    public:
       virtual ~ValueArrayAllocator();
-
+      virtual ValueInternalArray *newArray() = 0;
+      virtual ValueInternalArray *newArrayCopy( const ValueInternalArray &other ) = 0;
+      virtual void destructArray( ValueInternalArray *array ) = 0;
+      /** \brief Reallocate array page index.
+       * Reallocates an array of pointer on each page.
+       * \param indexes [input] pointer on the current index. May be \c NULL.
+       *                [output] pointer on the new index of at least 
+       *                         \a minNewIndexCount pages. 
+       * \param indexCount [input] current number of pages in the index.
+       *                   [output] number of page the reallocated index can handle.
+       *                            \b MUST be >= \a minNewIndexCount.
+       * \param minNewIndexCount Minimum number of page the new index must be able to
+       *                         handle.
+       */
       virtual void reallocateArrayPageIndex( Value **&indexes, 
                                              ValueInternalArray::PageIndex &indexCount,
                                              ValueInternalArray::PageIndex minNewIndexCount ) = 0;

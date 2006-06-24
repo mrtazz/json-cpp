@@ -13,29 +13,99 @@ ValueMapAllocator::~ValueMapAllocator()
 {
 }
 
+#ifdef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
 class DefaultValueMapAllocator : public ValueMapAllocator
 {
 public: // overridden from ValueMapAllocator
-   virtual ValueInternalLink *allocateBuckets( unsigned int size )
+   virtual ValueInternalMap *newMap()
+   {
+      return new ValueInternalMap();
+   }
+
+   virtual ValueInternalMap *newMapCopy( const ValueInternalMap &other )
+   {
+      return new ValueInternalMap( other );
+   }
+
+   virtual void destructMap( ValueInternalMap *map )
+   {
+      delete map;
+   }
+
+   virtual ValueInternalLink *allocateMapBuckets( unsigned int size )
    {
       return new ValueInternalLink[size];
    }
 
-   virtual void releaseBuckets( ValueInternalLink *links )
+   virtual void releaseMapBuckets( ValueInternalLink *links )
    {
       delete [] links;
    }
 
-   virtual ValueInternalLink *allocateLink()
+   virtual ValueInternalLink *allocateMapLink()
    {
       return new ValueInternalLink();
    }
 
-   virtual void releaseLink( ValueInternalLink *link )
+   virtual void releaseMapLink( ValueInternalLink *link )
    {
       delete link;
    }
 };
+#else
+class DefaultValueMapAllocator : public ValueMapAllocator
+{
+public: // overridden from ValueMapAllocator
+   virtual ValueInternalMap *newMap()
+   {
+      ValueInternalMap *map = mapsAllocator_.allocate();
+      new (map) ValueInternalMap(); // placement new
+      return map;
+   }
+
+   virtual ValueInternalMap *newMapCopy( const ValueInternalMap &other )
+   {
+      ValueInternalMap *map = mapsAllocator_.allocate();
+      new (map) ValueInternalMap( other ); // placement new
+      return map;
+   }
+
+   virtual void destructMap( ValueInternalMap *map )
+   {
+      if ( map )
+      {
+         map->~ValueInternalMap();
+         mapsAllocator_.release( map );
+      }
+   }
+
+   virtual ValueInternalLink *allocateMapBuckets( unsigned int size )
+   {
+      return new ValueInternalLink[size];
+   }
+
+   virtual void releaseMapBuckets( ValueInternalLink *links )
+   {
+      delete [] links;
+   }
+
+   virtual ValueInternalLink *allocateMapLink()
+   {
+      ValueInternalLink *link = linksAllocator_.allocate();
+      memset( link, 0, sizeof(ValueInternalLink) );
+      return link;
+   }
+
+   virtual void releaseMapLink( ValueInternalLink *link )
+   {
+      link->~ValueInternalLink();
+      linksAllocator_.release( link );
+   }
+private:
+   BatchAllocator<ValueInternalMap,1> mapsAllocator_;
+   BatchAllocator<ValueInternalLink,1> linksAllocator_;
+};
+#endif
 
 static ValueMapAllocator *&mapAllocator()
 {
@@ -113,10 +183,10 @@ ValueInternalMap::~ValueInternalMap()
          {
             ValueInternalLink *linkToRelease = link;
             link = link->next_;
-            mapAllocator()->releaseLink( linkToRelease );
+            mapAllocator()->releaseMapLink( linkToRelease );
          }
       }
-      mapAllocator()->releaseBuckets( buckets_ );
+      mapAllocator()->releaseMapBuckets( buckets_ );
    }
 }
 
@@ -164,7 +234,7 @@ ValueInternalMap::reserve( BucketIndex newItemCount )
 {
    if ( !buckets_  &&  newItemCount > 0 )
    {
-      buckets_ = mapAllocator()->allocateBuckets( 1 );
+      buckets_ = mapAllocator()->allocateMapBuckets( 1 );
       bucketsSize_ = 1;
       tailLink_ = &buckets_[0];
    }
@@ -286,7 +356,7 @@ ValueInternalMap::doActualRemove( ValueInternalLink *link,
       ValueInternalLink *linkPreviousToLast = lastLink->previous_;
       if ( linkPreviousToLast != 0 )   // can not deleted bucket link.
       {
-         mapAllocator()->releaseLink( lastLink );
+         mapAllocator()->releaseMapLink( lastLink );
          linkPreviousToLast->next_ = 0;
          lastLink = linkPreviousToLast;
       }
@@ -345,7 +415,7 @@ ValueInternalMap::unsafeAdd( const char *key,
    }
    if ( index == ValueInternalLink::itemPerLink ) // need to add a new page
    {
-      ValueInternalLink *newLink = mapAllocator()->allocateLink();
+      ValueInternalLink *newLink = mapAllocator()->allocateMapLink();
       index = 0;
       link->next_ = newLink;
       previousLink = newLink;

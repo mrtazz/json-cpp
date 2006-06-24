@@ -6,6 +6,9 @@
 # include <cpptl/conststring.h>
 #endif
 #include <stddef.h>    // size_t
+#ifndef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
+# include "json_batchallocator.h"
+#endif // #ifndef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
 
 #define JSON_ASSERT_UNREACHABLE assert( false )
 #define JSON_ASSERT( condition ) assert( condition );  // @todo <= change this into an exception throw
@@ -198,6 +201,10 @@ Value::CZString::isStaticString() const
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
+/*! \internal Default constructor initialization must be equivalent to:
+ * memset( this, 0, sizeof(Value) )
+ * This optimization is used in ValueInternalMap fast allocator.
+ */
 Value::Value( ValueType type )
    : type_( type )
    , comments_( 0 )
@@ -227,10 +234,10 @@ Value::Value( ValueType type )
       break;
 #else
    case arrayValue:
-      value_.array_ = new ValueInternalArray();
+      value_.array_ = arrayAllocator()->newArray();
       break;
    case objectValue:
-      value_.map_ = new ValueInternalMap();
+      value_.map_ = mapAllocator()->newMap();
       break;
 #endif
    case booleanValue:
@@ -364,10 +371,10 @@ Value::Value( const Value &other )
       break;
 #else
    case arrayValue:
-      value_.array_ = new ValueInternalArray( *other.value_.array_ );
+      value_.array_ = arrayAllocator()->newArrayCopy( *other.value_.array_ );
       break;
    case objectValue:
-      value_.map_ = new ValueInternalMap( *other.value_.map_ );
+      value_.map_ = mapAllocator()->newMapCopy( *other.value_.map_ );
       break;
 #endif
    default:
@@ -407,10 +414,10 @@ Value::~Value()
       break;
 #else
    case arrayValue:
-      delete value_.array_;
+      arrayAllocator()->destructArray( value_.array_ );
       break;
    case objectValue:
-      delete value_.map_;
+      mapAllocator()->destructMap( value_.map_ );
       break;
 #endif
    default:

@@ -176,6 +176,9 @@
 			RelativePath="..\..\include\json\json.h">
 		</File>
 		<File
+			RelativePath=".\json_batchallocator.h">
+		</File>
+		<File
 			RelativePath=".\json_internalarray.inl">
 		</File>
 		<File

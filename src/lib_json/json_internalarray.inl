@@ -16,11 +16,27 @@ ValueArrayAllocator::~ValueArrayAllocator()
 // //////////////////////////////////////////////////////////////////
 // class DefaultValueArrayAllocator
 // //////////////////////////////////////////////////////////////////
+#ifdef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
 class DefaultValueArrayAllocator : public ValueArrayAllocator
 {
 public: // overridden from ValueArrayAllocator
    virtual ~DefaultValueArrayAllocator()
    {
+   }
+
+   virtual ValueInternalArray *newArray()
+   {
+      return new ValueInternalArray();
+   }
+
+   virtual ValueInternalArray *newArrayCopy( const ValueInternalArray &other )
+   {
+      return new ValueInternalArray( other );
+   }
+
+   virtual void destructArray( ValueInternalArray *array )
+   {
+      delete array;
    }
 
    virtual void reallocateArrayPageIndex( Value **&indexes, 
@@ -54,6 +70,74 @@ public: // overridden from ValueArrayAllocator
          free( value );
    }
 };
+
+#else // #ifdef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
+
+class DefaultValueArrayAllocator : public ValueArrayAllocator
+{
+public: // overridden from ValueArrayAllocator
+   virtual ~DefaultValueArrayAllocator()
+   {
+   }
+
+   virtual ValueInternalArray *newArray()
+   {
+      ValueInternalArray *array = arraysAllocator_.allocate();
+      new (array) ValueInternalArray(); // placement new
+      return array;
+   }
+
+   virtual ValueInternalArray *newArrayCopy( const ValueInternalArray &other )
+   {
+      ValueInternalArray *array = arraysAllocator_.allocate();
+      new (array) ValueInternalArray( other ); // placement new
+      return array;
+   }
+
+   virtual void destructArray( ValueInternalArray *array )
+   {
+      if ( array )
+      {
+         array->~ValueInternalArray();
+         arraysAllocator_.release( array );
+      }
+   }
+
+   virtual void reallocateArrayPageIndex( Value **&indexes, 
+                                          ValueInternalArray::PageIndex &indexCount,
+                                          ValueInternalArray::PageIndex minNewIndexCount )
+   {
+      ValueInternalArray::PageIndex newIndexCount = (indexCount*3)/2 + 1;
+      if ( minNewIndexCount > newIndexCount )
+         newIndexCount = minNewIndexCount;
+      void *newIndexes = realloc( indexes, sizeof(Value*) * newIndexCount );
+      if ( !newIndexes )
+         throw std::bad_alloc();
+      indexCount = newIndexCount;
+      indexes = static_cast<Value **>( newIndexes );
+   }
+   virtual void releaseArrayPageIndex( Value **indexes, 
+                                       ValueInternalArray::PageIndex indexCount )
+   {
+      if ( indexes )
+         free( indexes );
+   }
+
+   virtual Value *allocateArrayPage()
+   {
+      return static_cast<Value *>( pagesAllocator_.allocate() );
+   }
+
+   virtual void releaseArrayPage( Value *value )
+   {
+      if ( value )
+         pagesAllocator_.release( value );
+   }
+private:
+   BatchAllocator<ValueInternalArray,1> arraysAllocator_;
+   BatchAllocator<Value,ValueInternalArray::itemsPerPage> pagesAllocator_;
+};
+#endif // #ifdef JSON_USE_SIMPLE_INTERNAL_ALLOCATOR
 
 static ValueArrayAllocator *&arrayAllocator()
 {
