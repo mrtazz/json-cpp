@@ -13,9 +13,10 @@ if 'doxygen' in env['TOOLS']:
     env.AlwaysBuild(alias_doc_cmd)
 
     for dir in doc_cmd:
-        env.Alias('doc', env.Install( dir.path, '#README.txt' ) )
+        env.Alias('doc', env.Install( '#' + dir.path, '#README.txt' ) )
         filename = os.path.split(dir.path)[1]
         targz_path = os.path.join( env['DIST_DIR'], '%s.tar.gz' % filename )
         zip_doc_cmd = env.TarGz( targz_path, [env.Dir(dir)],
                                  TARGZ_BASEDIR = doc_topdir )
+        env.Depends( zip_doc_cmd, alias_doc_cmd )
         env.Alias( 'doc-dist', zip_doc_cmd )

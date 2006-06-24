@@ -9,6 +9,31 @@
 // //////////////////////////////////////////////////////////////////
 // //////////////////////////////////////////////////////////////////
 
+/** \internal MUST be safely initialized using memset( this, 0, sizeof(ValueInternalLink) );
+   * This optimization is used by the fast allocator.
+   */
+ValueInternalLink::ValueInternalLink()
+   : previous_( 0 )
+   , next_( 0 )
+{
+}
+
+ValueInternalLink::~ValueInternalLink()
+{ 
+   for ( int index =0; index < itemPerLink; ++index )
+   {
+      if ( !items_[index].isItemAvailable() )
+      {
+         if ( !items_[index].isMemberNameStatic() )
+            free( keys_[index] );
+      }
+      else
+         break;
+   }
+}
+
+
+
 ValueMapAllocator::~ValueMapAllocator()
 {
 }
@@ -390,7 +415,7 @@ ValueInternalMap::setNewItem( const char *key,
                               ValueInternalLink *link, 
                               BucketIndex index )
 {
-   char *duplicatedKey = safeStringDup( key );
+   char *duplicatedKey = valueAllocator()->makeMemberName( key );
    ++itemCount_;
    link->keys_[index] = duplicatedKey;
    link->items_[index].setItemUsed();

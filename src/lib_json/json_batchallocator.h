@@ -4,6 +4,8 @@
 # include <stdlib.h>
 # include <assert.h>
 
+# ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
+
 namespace Json {
 
 /* Fast memory allocator.
@@ -116,6 +118,8 @@ private:
 
 
 } // namespace Json
+
+# endif // ifndef JSONCPP_DOC_INCLUDE_IMPLEMENTATION
 
 #endif // JSONCPP_BATCHALLOCATOR_H_INCLUDED
 

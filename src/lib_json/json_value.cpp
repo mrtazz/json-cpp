@@ -21,39 +21,90 @@ const Value::Int Value::minInt = Value::Int( ~(Value::UInt(-1)/2) );
 const Value::Int Value::maxInt = Value::Int( Value::UInt(-1)/2 );
 const Value::UInt Value::maxUInt = Value::UInt(-1);
 
+// A "safe" implementation of strdup. Allow null pointer to be passed. 
+// Also avoid warning on msvc80.
+//
+//inline char *safeStringDup( const char *czstring )
+//{
+//   if ( czstring )
+//   {
+//      const size_t length = (unsigned int)( strlen(czstring) + 1 );
+//      char *newString = static_cast<char *>( malloc( length ) );
+//      memcpy( newString, czstring, length );
+//      return newString;
+//   }
+//   return 0;
+//}
+//
+//inline char *safeStringDup( const std::string &str )
+//{
+//   if ( !str.empty() )
+//   {
+//      const size_t length = str.length();
+//      char *newString = static_cast<char *>( malloc( length + 1 ) );
+//      memcpy( newString, str.c_str(), length );
+//      newString[length] = 0;
+//      return newString;
+//   }
+//   return 0;
+//}
+
 ValueAllocator::~ValueAllocator()
 {
 }
 
-
-
-// A "safe" implementation of strdup. Allow null pointer to be passed. 
-// Also avoid warning on msvc80.
-
-inline char *safeStringDup( const char *czstring )
+class DefaultValueAllocator : public ValueAllocator
 {
-   if ( czstring )
+public:
+   virtual ~DefaultValueAllocator()
    {
-      const size_t length = (unsigned int)( strlen(czstring) + 1 );
-      char *newString = static_cast<char *>( malloc( length ) );
-      memcpy( newString, czstring, length );
-      return newString;
    }
-   return 0;
-}
 
-inline char *safeStringDup( const std::string &str )
-{
-   if ( !str.empty() )
+   virtual char *makeMemberName( const char *memberName )
    {
-      const size_t length = str.length();
+      return duplicateStringValue( memberName );
+   }
+
+   virtual void releaseMemberName( char *memberName )
+   {
+      releaseStringValue( memberName );
+   }
+
+   virtual char *duplicateStringValue( const char *value, 
+                                       unsigned int length = unknown )
+   {
+      if ( !value  ||  value[0] == 0 )
+         return 0;
+
+      if ( length == unknown )
+         length = (unsigned int)strlen(value);
       char *newString = static_cast<char *>( malloc( length + 1 ) );
-      memcpy( newString, str.c_str(), length );
+      memcpy( newString, value, length );
       newString[length] = 0;
       return newString;
    }
-   return 0;
+
+   virtual void releaseStringValue( char *value )
+   {
+      if ( value )
+         free( value );
+   }
+};
+
+static ValueAllocator *&valueAllocator()
+{
+   static DefaultValueAllocator defaultAllocator;
+   static ValueAllocator *valueAllocator = &defaultAllocator;
+   return valueAllocator;
 }
+
+static struct DummyValueAllocatorInitializer {
+   DummyValueAllocatorInitializer() 
+   {
+      valueAllocator();      // ensure valueAllocator() statics are initialized before main().
+   }
+} dummyValueAllocatorInitializer;
+
 
 
 // //////////////////////////////////////////////////////////////////
@@ -88,7 +139,7 @@ Value::CommentInfo::CommentInfo()
 Value::CommentInfo::~CommentInfo()
 {
    if ( comment_ )
-      free( comment_ );
+      valueAllocator()->releaseStringValue( comment_ );
 }
 
 
@@ -96,8 +147,8 @@ void
 Value::CommentInfo::setComment( const char *text )
 {
    if ( comment_ )
-      free( comment_ );
-   comment_ = safeStringDup( text );
+      valueAllocator()->releaseStringValue( comment_ );
+   comment_ = valueAllocator()->duplicateStringValue( text );
 }
 
 
@@ -120,14 +171,16 @@ Value::CZString::CZString( int index )
 }
 
 Value::CZString::CZString( const char *cstr, DuplicationPolicy allocate )
-   : cstr_( allocate == duplicate ? safeStringDup(cstr) : cstr )
+   : cstr_( allocate == duplicate ? valueAllocator()->makeMemberName(cstr) 
+                                  : cstr )
    , index_( allocate )
 {
 }
 
 Value::CZString::CZString( const CZString &other )
-   : cstr_( other.index_ != noDuplication &&  other.cstr_ != 0 ? safeStringDup( other.cstr_ )
-                                                               : other.cstr_ )
+: cstr_( other.index_ != noDuplication &&  other.cstr_ != 0
+                ?  valueAllocator()->makeMemberName( other.cstr_ )
+                : other.cstr_ )
    , index_( other.cstr_ ? (other.index_ == noDuplication ? noDuplication : duplicate)
                          : other.index_ )
 {
@@ -136,7 +189,7 @@ Value::CZString::CZString( const CZString &other )
 Value::CZString::~CZString()
 {
    if ( cstr_  &&  index_ == duplicate )
-      free( const_cast<char *>( cstr_ ) );
+      valueAllocator()->releaseMemberName( const_cast<char *>( cstr_ ) );
 }
 
 void 
@@ -288,7 +341,7 @@ Value::Value( const char *value )
    , itemIsUsed_( 0 )
 #endif
 {
-   value_.string_ = safeStringDup( value );
+   value_.string_ = valueAllocator()->duplicateStringValue( value );
 }
 
 Value::Value( const std::string &value )
@@ -299,7 +352,8 @@ Value::Value( const std::string &value )
    , itemIsUsed_( 0 )
 #endif
 {
-   value_.string_ = safeStringDup( value );
+   value_.string_ = valueAllocator()->duplicateStringValue( value.c_str(), 
+                                                            (unsigned int)value.length() );
 
 }
 
@@ -324,7 +378,7 @@ Value::Value( const CppTL::ConstString &value )
    , itemIsUsed_( 0 )
 #endif
 {
-   value_.string_ = safeStringDup( value );
+   value_.string_ = valueAllocator()->duplicateStringValue( value, value.length() );
 }
 # endif
 
@@ -358,7 +412,7 @@ Value::Value( const Value &other )
    case stringValue:
       if ( other.value_.string_ )
       {
-         value_.string_ = safeStringDup( other.value_.string_ );
+         value_.string_ = valueAllocator()->duplicateStringValue( other.value_.string_ );
          allocated_ = true;
       }
       else
@@ -405,7 +459,7 @@ Value::~Value()
       break;
    case stringValue:
       if ( allocated_ )
-         free( value_.string_ );
+         valueAllocator()->releaseStringValue( value_.string_ );
       break;
 #ifndef JSON_VALUE_USE_INTERNAL_MAP
    case arrayValue:
@@ -472,7 +526,6 @@ Value::compare( const Value &other )
    case booleanValue:
       break;
    case stringValue,
-      free( value_.string_ );
       break;
    case arrayValue:
       delete value_.array_;

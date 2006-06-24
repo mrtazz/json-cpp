@@ -14,6 +14,8 @@
 #  include <cpptl/forwards.h>
 # endif
 
+/** \brief JSON (JavaScript Object Notation).
+ */
 namespace Json {
 
    /** \brief Type of the value held by a Value object.
@@ -43,9 +45,9 @@ namespace Json {
 //   typedef CppTL::AnyEnumerator<const Value &> EnumValues;
 //# endif
 
-   /** \brief Lightweight wrapper to identify static string.
+   /** \brief Lightweight wrapper to tag static string.
     *
-    * Value constructor and objectValue member assignement take advantage of the
+    * Value constructor and objectValue member assignement takes advantage of the
     * StaticString and avoid the cost of string duplication when storing the
     * string or the member name.
     *
@@ -127,6 +129,7 @@ namespace Json {
       static const UInt maxUInt;
 
    private:
+#ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
 # ifndef JSON_VALUE_USE_INTERNAL_MAP
       class CZString 
       {
@@ -160,6 +163,7 @@ namespace Json {
       typedef CppTL::SmallMap<CZString, Value> ObjectValues;
 #  endif // ifndef JSON_USE_CPPTL_SMALLMAP
 # endif // ifndef JSON_VALUE_USE_INTERNAL_MAP
+#endif // ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
 
    public:
       Value( ValueType type = nullValue );
@@ -454,7 +458,13 @@ namespace Json {
       Args args_;
    };
 
-
+   /** \brief Allocator to customize member name and string value memory management done by Value.
+    *
+    * - makeMemberName() and releaseMemberName() are called to respectively duplicate and
+    *   free an Json::objectValue member name.
+    * - duplicateStringValue() and releaseStringValue() are called similarly to
+    *   duplicate and free a Json::stringValue value.
+    */
    class ValueAllocator
    {
    public:
@@ -462,10 +472,11 @@ namespace Json {
 
       virtual ~ValueAllocator();
 
-      virtual char *makeMemberName() = 0;
-      virtual void releaseMemberName( char * ) = 0;
-      virtual char *duplicateValue( const char *value, unsigned int length = unknown ) = 0;
-      virtual void releaseValue( char *value ) = 0;
+      virtual char *makeMemberName( const char *memberName ) = 0;
+      virtual void releaseMemberName( char *memberName ) = 0;
+      virtual char *duplicateStringValue( const char *value, 
+                                          unsigned int length = unknown ) = 0;
+      virtual void releaseStringValue( char *value ) = 0;
    };
 
 #ifdef JSON_VALUE_USE_INTERNAL_MAP
@@ -526,7 +537,7 @@ namespace Json {
       virtual void releaseMapLink( ValueInternalLink *link ) = 0;
    };
 
-   /** \brief Link of hash-map used to store arrayValue and objectValue.
+   /** \brief ValueInternalMap hash-map bucket chain link (for internal use only).
     * \internal previous_ & next_ allows for bidirectional traversal.
     */
    class JSON_API ValueInternalLink
@@ -538,28 +549,9 @@ namespace Json {
          flagUsed = 1
       };
 
-      /** \internal MUST be safely initialized using memset( this, 0, sizeof(ValueInternalLink) );
-       * This optimization is used by the fast allocator.
-       */
-      ValueInternalLink()
-         : previous_( 0 )
-         , next_( 0 )
-      {
-      }
+      ValueInternalLink();
 
-      ~ValueInternalLink()
-      { 
-         for ( int index =0; index < itemPerLink; ++index )
-         {
-            if ( !items_[index].isItemAvailable() )
-            {
-               if ( !items_[index].isMemberNameStatic() )
-                  free( keys_[index] );
-            }
-            else
-               break;
-         }
-      }
+      ~ValueInternalLink();
 
       Value items_[itemPerLink];
       char *keys_[itemPerLink];
@@ -568,6 +560,18 @@ namespace Json {
    };
 
 
+   /** \brief A linked page based hash-table implementation used internally by Value.
+    * \internal ValueInternalMap is a tradional bucket based hash-table, with a linked
+    * list in each bucket to handle collision. There is an addional twist in that
+    * each node of the collision linked list is a page containing a fixed amount of
+    * value. This provides a better compromise between memory usage and speed.
+    * 
+    * Each bucket is made up of a chained list of ValueInternalLink. The last
+    * link of a given bucket can be found in the 'previous_' field of the following bucket.
+    * The last link of the last bucket is stored in tailLink_ as it has no following bucket.
+    * Only the last link of a bucket may contains 'available' item. The last link always
+    * contains at least one element unless is it the bucket one very first link.
+    */
    class JSON_API ValueInternalMap
    {
       friend class ValueIteratorBase;
@@ -576,6 +580,7 @@ namespace Json {
       typedef unsigned int HashKey;
       typedef unsigned int BucketIndex;
 
+# ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
       struct IteratorState
       {
          ValueInternalMap *map_;
@@ -583,14 +588,7 @@ namespace Json {
          BucketIndex itemIndex_;
          BucketIndex bucketIndex_;
       };
-
-      /* When the bucket is allocated, one page is immediately allocated for each bucket.
-         Each bucket is made up of a chained list of ValueInternalLink. The last
-         link of a given bucket can be found in the 'previous_' field of the following bucket.
-         The last link of the last bucket is stored in tailLink_ as it has no following bucket.
-         Only the last link of a bucket may contains 'available' item. The last link always
-         contains at least one element unless is it the bucket one very first link.
-      */
+# endif // ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
 
       ValueInternalMap();
       ValueInternalMap( const ValueInternalMap &other );
@@ -674,12 +672,14 @@ namespace Json {
       typedef Value::ArrayIndex ArrayIndex;
       typedef unsigned int PageIndex;
 
+# ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
       struct IteratorState // Must be a POD
       {
          ValueInternalArray *array_;
          Value **currentPageIndex_;
          unsigned int currentItemIndex_;
       };
+# endif // ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
 
       ValueInternalArray();
       ValueInternalArray( const ValueInternalArray &other );
