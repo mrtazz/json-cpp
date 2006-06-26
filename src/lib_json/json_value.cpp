@@ -73,8 +73,9 @@ public:
    virtual char *duplicateStringValue( const char *value, 
                                        unsigned int length = unknown )
    {
-      if ( !value  ||  value[0] == 0 )
-         return 0;
+      //@todo invesgate this old optimization
+      //if ( !value  ||  value[0] == 0 )
+      //   return 0;
 
       if ( length == unknown )
          length = (unsigned int)strlen(value);
