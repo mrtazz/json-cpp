@@ -25,11 +25,11 @@ template<typename AllocatedType
 class BatchAllocator
 {
 public:
-   typedef AllocatedType AllocatedType;
+   typedef AllocatedType Type;
 
    BatchAllocator( unsigned int objectsPerPage = 255 )
-      : objectsPerPage_( objectsPerPage )
-      , freeHead_( 0 )
+      : freeHead_( 0 )
+      , objectsPerPage_( objectsPerPage )
    {
 //      printf( "Size: %d => %s\n", sizeof(AllocatedType), typeid(AllocatedType).name() );
       assert( sizeof(AllocatedType) * objectPerAllocation >= sizeof(AllocatedType *) ); // We must be able to store a slist in the object free space.

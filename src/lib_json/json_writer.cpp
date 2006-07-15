@@ -13,7 +13,6 @@ static void uintToString( unsigned int value,
                           char *&current )
 {
    *--current = 0;
-   char *end = current;
    do
    {
       *--current = (value % 10) + '0';

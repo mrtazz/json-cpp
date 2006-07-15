@@ -583,7 +583,7 @@ Reader::decodeUnicodeEscapeSequence( Token &token,
    {
       Char c = *current++;
       unicode *= 16;
-      if ( c >=0  &&  c <= 9 )
+      if ( c >= '0'  &&  c <= '9' )
          unicode += c - '0';
       else if ( c >= 'a'  &&  c <= 'f' )
          unicode += c - 'a' + 10;
