@@ -162,7 +162,7 @@ RunJSONTests = ActionFactory(runJSONTests_action, runJSONTests_string )
 env.Alias( 'check' )
 
 srcdist_cmd = env['SRCDIST_ADD']( source = """
-    AUTHORS README SConstruct
+    AUTHORS README.txt SConstruct
     """.split() )
 env.Alias( 'src-dist', srcdist_cmd )
 
