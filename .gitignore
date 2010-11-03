@@ -1,0 +1,4 @@
+# ignore lib folder
+lib*
+# ignore object files
+*.o
