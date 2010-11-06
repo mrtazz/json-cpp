@@ -14,7 +14,6 @@ STATIC = $(LIBDIR)/libjson-cpp.a
 
 # set library and include paths
 INCLUDE =  -Iinclude -I/usr/local/include
-LIBS = -lcurl
 
 # set compiler and linker flags
 CCFLAGS = -fPIC -O3 -W -Wall
@@ -29,7 +28,7 @@ OBJS = $(SRCS:.cpp=.o)
 
 # dynamic lib rule
 $(LIB): $(OBJS) $(LIBDIR)
-	$(LD) $(LDFLAGS) -shared -soname,$(LIBNAME) -o $(LIB) $(OBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -shared -soname,$(LIBNAME) -o $(LIB) $(OBJS)
 
 # static lib rule
 $(STATIC): $(OBJS) $(LIBDIR)
