@@ -28,7 +28,7 @@ OBJS = $(SRCS:.cpp=.o)
 
 # dynamic lib rule
 $(LIB): $(OBJS) $(LIBDIR)
-	$(LD) $(LDFLAGS) -shared -soname,$(LIBNAME) -o $(LIB) $(OBJS)
+	$(LD) $(LDFLAGS) -shared -Wl,-soname,$(LIBNAME) -o $(LIB) $(OBJS)
 
 # static lib rule
 $(STATIC): $(OBJS) $(LIBDIR)
