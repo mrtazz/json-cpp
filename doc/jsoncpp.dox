@@ -3,7 +3,7 @@
 \section _intro Introduction
 
 <a HREF="http://www.json.org/">JSON (JavaScript Object Notation)</a>
- is a lightweight data-interchange format. 
+ is a lightweight data-interchange format.
 It can represent integer, real number, string, an ordered sequence of value, and
 a collection of name/value pairs.
 
@@ -13,14 +13,14 @@ Here is an example of JSON data:
 {
     // Default encoding for text
     "encoding" : "UTF-8",
-    
+
     // Plug-ins loaded at start-up
     "plug-ins" : [
         "python",
         "c++",
         "ruby"
         ],
-        
+
     // Tab indent size
     "indent" : { "length" : 3, "use_space" : true }
 }
@@ -31,7 +31,7 @@ Here is an example of JSON data:
 - attach C and C++ style comments to element during parsing
 - rewrite JSON document preserving original comments
 
-Notes: Comments used to be supported in JSON but where removed for 
+Notes: Comments used to be supported in JSON but where removed for
 portability (C like comments are not supported in Python). Since
 comments are useful in configuration/input file, this feature was
 preserved.
@@ -58,7 +58,7 @@ std::string encoding = root.get("encoding", "UTF-8" ).asString();
 const Json::Value plugins = root["plug-ins"];
 for ( int index = 0; index < plugins.size(); ++index )  // Iterates over the sequence elements.
    loadPlugIn( plugins[index].asString() );
-   
+
 setIndentLength( root["indent"].get("length", 3).asInt() );
 setIndentUseSpace( root["indent"].get("use_space", true).asBool() );
 
@@ -83,33 +83,33 @@ std::cout << root;
 \endcode
 
 \section _pbuild Build instructions
-The build instructions are located in the file 
+The build instructions are located in the file
 <a HREF="README.txt">README.txt</a> in the top-directory of the project.
 
-Permanent link to the latest revision of the file in subversion: 
+Permanent link to the latest revision of the file in subversion:
 <a HREF="http://svn.sourceforge.net/viewcvs.cgi/jsoncpp/README.txt?view=markup">latest README.txt</a>
 
 \section _pdownload Download
-The sources can be downloaded from 
+The sources can be downloaded from
 <a HREF="http://sourceforge.net/projects/jsoncpp/files/">SourceForge download page</a>.
 
-The latest version of the source is available in the project's subversion repository: 
+The latest version of the source is available in the project's subversion repository:
 <a HREF="http://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/">
 http://jsoncpp.svn.sourceforge.net/svnroot/jsoncpp/trunk/</a>
 
-To checkout the source, see the following 
+To checkout the source, see the following
 <a HREF="http://sourceforge.net/scm/?type=svn&group_id=144446">instructions</a>.
 
 \section _news What's New?
-The description of latest changes can be found in 
+The description of latest changes can be found in
 <a HREF="NEWS.txt">NEWS.txt</a> in the top-directory of the project.
 
-Permanent link to the latest revision of the file in subversion: 
+Permanent link to the latest revision of the file in subversion:
 <a HREF="http://svn.sourceforge.net/viewcvs.cgi/jsoncpp/README.txt?view=markup">latest NEWS.txt</a>
 
 \section _plinks Project links
 - <a HREF="http://jsoncpp.sourceforge.net">json-cpp home</a>
-- <a HREF="http://www.sourceforge.net/projects/jsoncpp">json-cpp sourceforge project</a>
+- <a HREF="http://www.sourceforge.net/projects/jsoncpp/">json-cpp sourceforge project</a>
 
 \section _rlinks Related links
 - <a HREF="http://www.json.org/">JSON</a> Specification and alternate language implementations.
@@ -119,7 +119,7 @@ Permanent link to the latest revision of the file in subversion:
 \section _license License
 See file <a HREF="LICENSE">LICENSE</a> in the top-directory of the project.
 
-Basically JsonCpp is licensed under MIT license, or public domain if desired 
+Basically JsonCpp is licensed under MIT license, or public domain if desired
 and recognized in your jurisdiction.
 
 \author Baptiste Lepilleur <blep@users.sourceforge.net>

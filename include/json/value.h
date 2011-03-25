@@ -126,12 +126,35 @@ namespace Json {
       typedef ValueConstIterator const_iterator;
       typedef Json::UInt UInt;
       typedef Json::Int Int;
+# if defined(JSON_HAS_INT64)
+      typedef Json::UInt64 UInt64;
+      typedef Json::Int64 Int64;
+#endif // defined(JSON_HAS_INT64)
+	  typedef Json::LargestInt LargestInt;
+	  typedef Json::LargestUInt LargestUInt;
       typedef Json::ArrayIndex ArrayIndex;
 
       static const Value null;
-      static const Int minInt;
+	  /// Minimum signed integer value that can be stored in a Json::Value.
+	  static const LargestInt minLargestInt;
+	  /// Maximum signed integer value that can be stored in a Json::Value.
+      static const LargestInt maxLargestInt;
+	  /// Maximum unsigned integer value that can be stored in a Json::Value.
+      static const LargestUInt maxLargestUInt;
+
+	  /// Minimum signed int value that can be stored in a Json::Value.
+	  static const Int minInt;
+	  /// Maximum signed int value that can be stored in a Json::Value.
       static const Int maxInt;
+	  /// Maximum unsigned int value that can be stored in a Json::Value.
       static const UInt maxUInt;
+
+	  /// Minimum signed 64 bits int value that can be stored in a Json::Value.
+	  static const Int64 minInt64;
+	  /// Maximum signed 64 bits int value that can be stored in a Json::Value.
+      static const Int64 maxInt64;
+	  /// Maximum unsigned 64 bits int value that can be stored in a Json::Value.
+      static const UInt64 maxUInt64;
 
    private:
 #ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
@@ -187,12 +210,12 @@ namespace Json {
 	\endcode
       */
       Value( ValueType type = nullValue );
-#if !defined(JSON_NO_INT64)
-      Value( int value );
-      Value( ArrayIndex value );
-#endif // if !defined(JSON_NO_INT64)
       Value( Int value );
       Value( UInt value );
+#if defined(JSON_HAS_INT64)
+      Value( Int64 value );
+      Value( UInt64 value );
+#endif // if defined(JSON_HAS_INT64)
       Value( double value );
       Value( const char *value );
       Value( const char *beginValue, const char *endValue );
@@ -240,6 +263,11 @@ namespace Json {
 # endif
       Int asInt() const;
       UInt asUInt() const;
+      Int64 asInt64() const;
+      UInt64 asUInt64() const;
+      LargestInt asLargestInt() const;
+      LargestUInt asLargestUInt() const;
+      float asFloat() const;
       double asDouble() const;
       bool asBool() const;
 
@@ -284,11 +312,25 @@ namespace Json {
       /// (You may need to say 'value[0u]' to get your compiler to distinguish
       ///  this from the operator[] which takes a string.)
       Value &operator[]( ArrayIndex index );
-      /// Access an array element (zero based index )
+
+	  /// Access an array element (zero based index ).
+      /// If the array contains less than index element, then null value are inserted
+      /// in the array so that its size is index+1.
+      /// (You may need to say 'value[0u]' to get your compiler to distinguish
+      ///  this from the operator[] which takes a string.)
+      Value &operator[]( int index );
+
+	  /// Access an array element (zero based index )
       /// (You may need to say 'value[0u]' to get your compiler to distinguish
       ///  this from the operator[] which takes a string.)
       const Value &operator[]( ArrayIndex index ) const;
-      /// If the array contains at least index+1 elements, returns the element value, 
+
+	  /// Access an array element (zero based index )
+      /// (You may need to say 'value[0u]' to get your compiler to distinguish
+      ///  this from the operator[] which takes a string.)
+      const Value &operator[]( int index ) const;
+
+	  /// If the array contains at least index+1 elements, returns the element value, 
       /// otherwise returns defaultValue.
       Value get( ArrayIndex index, 
                  const Value &defaultValue ) const;
@@ -433,8 +475,8 @@ namespace Json {
 
       union ValueHolder
       {
-         Int int_;
-         UInt uint_;
+         LargestInt int_;
+         LargestUInt uint_;
          double real_;
          bool bool_;
          char *string_;
