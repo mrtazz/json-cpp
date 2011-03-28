@@ -18,7 +18,7 @@ options = Variables()
 options.Add( EnumVariable('platform',
                         'Platform (compiler/stl) used to build the project',
                         'msvc71',
-                        allowed_values='suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux-gcc'.split(),
+                        allowed_values='suncc vacpp mingw msvc6 msvc7 msvc71 msvc80 msvc90 linux-gcc arm-cs'.split(),
                         ignorecase=2) )
 
 try:
@@ -74,6 +74,10 @@ if platform == 'suncc':
     env.Tool( 'sunlink' )
     env.Tool( 'sunar' )
     env.Append( CCFLAGS = ['-mt'] )
+elif platform == 'arm-cs':
+    env.Tool( 'default' )
+    env['CXX'] = 'arm-none-linux-gnueabi-g++'
+    env.Append( LIBS = ['pthread'], CCFLAGS = "-Wall" )
 elif platform == 'vacpp':
     env.Tool( 'default' )
     env.Tool( 'aixcc' )
