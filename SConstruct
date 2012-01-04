@@ -78,6 +78,10 @@ elif platform == 'arm-cs':
     env.Tool( 'default' )
     env['CXX'] = 'arm-none-linux-gnueabi-g++'
     env.Append( LIBS = ['pthread'], CCFLAGS = "-Wall" )
+elif platform == 'arm-angstrom':
+    env.Tool( 'default' )
+    env['CXX'] = 'arm-angstrom-linux-gnueabi-g++'
+    env.Append( LIBS = ['pthread'], CCFLAGS = "-Wall" )
 elif platform == 'vacpp':
     env.Tool( 'default' )
     env.Tool( 'aixcc' )
