@@ -38,9 +38,11 @@ where PLTFRM may be one of:
 	msvc90 Microsoft Visual Studio 2008
 	linux-gcc Gnu C++ (linux, also reported to work for Mac OS X)
 
-Notes: if you are building with Microsoft Visual Studio 2008, you need to 
+Notes:
+If you are building with Microsoft Visual Studio 2008, you need to 
 setup the environment by running vcvars32.bat (e.g. MSVC 2008 command prompt)
 before running scons.
+You can also build from Qt (using Scons). Just open the json-cpp.creator in QtCreator.
 	
 Adding platform is fairly simple. You need to change the Sconstruct file 
 to do so.
