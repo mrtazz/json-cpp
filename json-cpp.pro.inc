@@ -1,28 +1,21 @@
+
 #-------------------------------------------------
 #
-# Project created by QtCreator 2012-04-03T17:48:33
-#
-# THIS IS NOT A REAL PRO FILE
-# this need to change at some point to be properly included
-# I AM SHOUTING
+# QtCreator project include file
 #
 #-------------------------------------------------
 
-SOURCES += \
-    json-cpp/src/lib_json/json_writer.cpp \
-    json-cpp/src/lib_json/json_value.cpp \
-    json-cpp/src/lib_json/json_reader.cpp
+INCLUDEPATH += $$JSON_CPP_SRC/include
 
-HEADERS += \
-    json-cpp/src/lib_json/json_tool.h \
-    json-cpp/src/lib_json/json_batchallocator.h \
-    json-cpp/include/json/writer.h \
-    json-cpp/include/json/value.h \
-    json-cpp/include/json/reader.h \
-    json-cpp/include/json/json.h \
-    json-cpp/include/json/forwards.h \
-    json-cpp/include/json/features.h \
-    json-cpp/include/json/config.h \
-    json-cpp/include/json/autolink.h
+SOURCES +=  $$JSON_CPP_SRC/src/lib_json/json_reader.cpp\
+    $$JSON_CPP_SRC/src/lib_json/json_value.cpp\
+    $$JSON_CPP_SRC/src/lib_json/json_writer.cpp
 
-INCLUDEPATH += json-cpp/include
+
+HEADERS  +=$$JSON_CPP_SRC/include/json/assertions.h \
+    $$JSON_CPP_SRC/include/json/config.h\
+    $$JSON_CPP_SRC/include/json/features.h\
+    $$JSON_CPP_SRC/include/json/forwards.h\
+    $$JSON_CPP_SRC/include/json/reader.h\
+    $$JSON_CPP_SRC/include/json/value.h\
+    $$JSON_CPP_SRC/include/json/writer.h
