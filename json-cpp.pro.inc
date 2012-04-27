@@ -5,6 +5,11 @@
 #
 #-------------------------------------------------
 
+#JSON_CPP_SRC must be specified by parent calling
+# .pro file for this to work properly. The default value
+# is :
+#JSON_CPP_SRC = submodule/json-cpp
+
 INCLUDEPATH += $$JSON_CPP_SRC/include
 
 SOURCES +=  $$JSON_CPP_SRC/src/lib_json/json_reader.cpp\
