@@ -11,6 +11,17 @@ if 'win32' == sys.platform:
 
 env.Append(CCFLAGS='-Wall')
 
+pysrc_root = str(Dir('#/src/main/python'))
+for root,dirnames,filenames in os.walk(pysrc_root):
+    for filename in fnmatch.filter(filenames,'*.py'):
+        rpath = os.path.relpath(root,pysrc_root)
+        outdir = os.path.join('module',rpath)
+        insrc = os.path.join(root,filename)
+        inst.append(cppenv.Install(outdir,insrc))
+        # print outdir,insrc
+
+env.Alias('install',None)
+
 libjsonenv = env.Clone()
 libjsonenv.Append(CPPPATH=[Dir('#/include/')])
 libjsonenv.Repository(Dir('#/src/lib_json/'))
