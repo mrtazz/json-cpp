@@ -1,0 +1,8 @@
+The Debian Package mb-libjsoncpp-dev
+===-------------------------------
+
+This package builds the MakerBot version of the json-cpp static library.
+
+At some point we may switch to the standard libjsoncpp-dev in the debian/ubuntu repostories. For now we'll leave it here.
+
+ -- MakerBot Industries dev team <dev@makerbot.com>  Wed, 31 Aug 2012 14:05:44 -0400
