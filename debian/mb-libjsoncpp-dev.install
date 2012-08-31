@@ -1,0 +1,2 @@
+obj/*.a /usr/lib/makerbot
+include/* /usr/include/makerbot
