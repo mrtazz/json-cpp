@@ -249,55 +249,22 @@ TestResult::addToLastFailure( const std::string &message )
    return *this;
 }
 
-
 TestResult &
-TestResult::operator << ( bool value )
-{
-   return addToLastFailure( value ? "true" : "false" );
+TestResult::operator << ( Json::Int64 value ) {
+   return addToLastFailure( Json::valueToString(value) );
 }
 
 
 TestResult &
-TestResult::operator << ( int value )
-{
-   char buffer[32];
-   sprintf( buffer, "%d", value );
-   return addToLastFailure( buffer );
+TestResult::operator << ( Json::UInt64 value ) {
+   return addToLastFailure( Json::valueToString(value) );
 }
 
 
 TestResult &
-TestResult::operator << ( unsigned int value )
-{
-   char buffer[32];
-   sprintf( buffer, "%u", value );
-   return addToLastFailure( buffer );
+TestResult::operator << ( bool value ) {
+   return addToLastFailure(value ? "true" : "false");
 }
-
-
-TestResult &
-TestResult::operator << ( double value )
-{
-   char buffer[32];
-   sprintf( buffer, "%16g", value );
-   return addToLastFailure( buffer );
-}
-
-
-TestResult &
-TestResult::operator << ( const char *value )
-{
-   return addToLastFailure( value ? value 
-                                  : "<NULL>" );
-}
-
-
-TestResult &
-TestResult::operator << ( const std::string &value )
-{
-   return addToLastFailure( value );
-}
-
 
 
 // class TestCase
@@ -373,7 +340,7 @@ Runner::runTestAt( unsigned int index, TestResult &result ) const
    catch ( const std::exception &e ) 
    {
       result.addFailure( __FILE__, __LINE__, 
-         "Unexpected exception caugth:" ) << e.what();
+         "Unexpected exception caught:" ) << e.what();
    }
 #endif // if JSON_USE_EXCEPTION
    delete test;

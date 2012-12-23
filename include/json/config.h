@@ -16,7 +16,7 @@
 //#  define JSON_USE_CPPTL_SMALLMAP 1
 /// If defined, indicates that Json specific container should be used
 /// (hash table & simple deque container with customizable allocator).
-/// THIS FEATURE IS STILL EXPERIMENTAL!
+/// THIS FEATURE IS STILL EXPERIMENTAL! There is know bugs: See #3177332
 //#  define JSON_VALUE_USE_INTERNAL_MAP 1
 /// Force usage of standard new/malloc based allocator instead of memory pool based allocator.
 /// The memory pools allocator used optimization (initializing Value and ValueInternalLink
@@ -24,9 +24,17 @@
 /// Only has effects if JSON_VALUE_USE_INTERNAL_MAP is defined.
 //#  define JSON_USE_SIMPLE_INTERNAL_ALLOCATOR 1
 
-/// If defined, indicates that Json use exception to report invalid type manipulation
-/// instead of C assert macro.
+// If non-zero, the library uses exceptions to report bad input instead of C
+// assertion macros. The default is to use exceptions.
+# ifndef JSON_USE_EXCEPTION
 # define JSON_USE_EXCEPTION 1
+# endif
+
+/// If defined, indicates that the source file is amalgated
+/// to prevent private header inclusion.
+/// Remarks: it is automatically defined in the generated amalgated header.
+// #define JSON_IS_AMALGAMATION
+
 
 # ifdef JSON_IN_CPPTL
 #  include <cpptl/config.h>
@@ -55,6 +63,14 @@
 #define JSON_USE_INT64_DOUBLE_CONVERSION 1
 #endif // if defined(_MSC_VER)  &&  _MSC_VER < 1200 // MSVC 6
 
+#if defined(_MSC_VER)  &&  _MSC_VER >= 1500 // MSVC 2008
+/// Indicates that the following function is deprecated.
+# define JSONCPP_DEPRECATED(message) __declspec(deprecated(message))
+#endif
+
+#if !defined(JSONCPP_DEPRECATED)
+# define JSONCPP_DEPRECATED(message)
+#endif // if !defined(JSONCPP_DEPRECATED)
 
 namespace Json {
    typedef int Int;
