@@ -8,7 +8,7 @@ env = Environment(ENV=os.environ)
 if 'win32' == sys.platform:
     env.Tool('mingw')
     env.Replace(CCFLAGS=[])
-else
+else:
     env.Append(CCFLAGS='-fPIC')
 
 env.Append(CCFLAGS='-Wall')
