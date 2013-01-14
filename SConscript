@@ -27,22 +27,22 @@ install_prefix = ARGUMENTS.get('install_prefix', '')
 
 if sys.platform == "linux2":
     if install_prefix == '': install_prefix = '/usr'
-    json_lib = install_prefix + "/lib"
-    json_include = install_prefix + "/include"
+    lib_dir = install_prefix + "/lib"
+    include_dir = install_prefix + "/include"
 elif sys.platform == "darwin":
-    framework_dir = install_prefix + '/Library/Frameworks/MakerBot.framework/Makerbot'
-    json_lib = framework_dir + "/Libraries"
-    json_include = framework_dir + "/Includes"
+    framework_dir = install_prefix + '/Library/Frameworks/MakerBot.framework'
+    lib_dir = framework_dir + "/Libraries"
+    include_dir = framework_dir + "/Includes"
 elif sys.platform == "win32":
     if install_prefix == '':
         if os.path.exists('c:/Program Files (x86)'):
             install_prefix = 'c:/Program Files (x86)/'
         else:
-            install_prefix = 'c:/Program Files/'
-        install_prefix += 'MakerBotSDK'
+            install_prefix = 'c:/Program Files/MakerBot'
+        install_prefix += '/SDK'
 
-    json_lib = install_prefix + "/mingw/lib"
-    json_include = install_prefix + "/mingw/include"
+    lib_dir = install_prefix + "/mingw/lib"
+    include_dir = install_prefix + "/mingw/include"
 
 
 install_list = map(lambda x: env.Install(json_lib, x), libjson)
