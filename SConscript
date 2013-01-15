@@ -11,9 +11,6 @@ if 'win32' == sys.platform:
 else:
     env.Append(CCFLAGS='-fPIC')
 
-env.Tool('default')
-env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
-
 env.Append(CCFLAGS='-Wall')
 
 includes = Dir('#/include')
@@ -22,11 +19,15 @@ sources = Dir('#/src/lib_json/')
 libjsonenv = env.Clone()
 libjsonenv.Append(CPPPATH=[includes])
 libjsonenv.Repository(sources)
+
+env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
+
 libjson = libjsonenv.SharedLibrary(
     'json', [
         File('src/lib_json/json_reader.cpp'),
         File('src/lib_json/json_value.cpp'),
         File('src/lib_json/json_writer.cpp'),])
+Default(libjson)
 
 env.MBInstallLib(libjson)
 env.MBInstallHeaders(includes)
