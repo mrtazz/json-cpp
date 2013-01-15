@@ -9,6 +9,9 @@ if 'win32' == sys.platform:
     env.Tool('mingw')
     env.Replace(CCFLAGS=[])
 
+env.Tool('default')
+env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
+
 env.Append(CCFLAGS='-Wall')
 
 includes = Dir('#/include')
@@ -23,29 +26,8 @@ libjson = libjsonenv.SharedLibrary(
         File('src/lib_json/json_value.cpp'),
         File('src/lib_json/json_writer.cpp'),])
 
-install_prefix = ARGUMENTS.get('install_prefix', '')
+env.MBInstallLib(libjson)
+env.MBInstallHeaders(includes)
 
-if sys.platform == "linux2":
-    if install_prefix == '': install_prefix = '/usr'
-    lib_dir = install_prefix + "/lib"
-    include_dir = install_prefix + "/include"
-elif sys.platform == "darwin":
-    framework_dir = install_prefix + '/Library/Frameworks/MakerBot.framework'
-    lib_dir = framework_dir + "/Libraries"
-    include_dir = framework_dir + "/Includes"
-elif sys.platform == "win32":
-    if install_prefix == '':
-        if os.path.exists('c:/Program Files (x86)'):
-            install_prefix = 'c:/Program Files (x86)/'
-        else:
-            install_prefix = 'c:/Program Files/MakerBot'
-        install_prefix += '/SDK'
-
-    lib_dir = install_prefix + "/mingw/lib"
-    include_dir = install_prefix + "/mingw/include"
-
-
-install_list = map(lambda x: env.Install(json_lib, x), libjson)
-install_list += map(lambda x: env.Install(json_include, x), [str(includes) + '/json'])
-env.Alias('install', install_list)
+env.MBCreateInstallTarget()
 
