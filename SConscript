@@ -8,12 +8,8 @@ env = Environment(ENV=os.environ)
 if 'win32' == sys.platform:
     env.Tool('mingw')
     env.Replace(CCFLAGS=[])
-else:
-    env.Append(CCFLAGS='-fPIC')
 
 env.Tool('default')
-env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
-
 env.Append(CCFLAGS='-Wall')
 
 includes = Dir('#/include')
@@ -28,6 +24,7 @@ libjson = libjsonenv.SharedLibrary(
         File('src/lib_json/json_value.cpp'),
         File('src/lib_json/json_writer.cpp'),])
 
+env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 env.MBInstallLib(libjson)
 env.MBInstallHeaders(includes)
 
