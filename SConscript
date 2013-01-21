@@ -13,7 +13,7 @@ else:
 
 env.Append(CCFLAGS='-Wall')
 
-includes = Dir('#/include')
+includes = Dir('include')
 sources = Dir('#/src/lib_json/')
 
 libjsonenv = env.Clone()
@@ -30,7 +30,7 @@ libjson = libjsonenv.SharedLibrary(
 Default(libjson)
 
 env.MBInstallLib(libjson)
-env.MBInstallHeaders(includes)
+env.MBInstallHeaders(env.MBGlob('include/*'))
 
 env.MBCreateInstallTarget()
 
