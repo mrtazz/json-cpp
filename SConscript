@@ -39,7 +39,7 @@ Default(libjson)
 
 env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 env.MBInstallLib(libjson)
-env.MBInstallHeaders(env.MBGlob('include/*'))
+env.MBInstallHeaders(env.MBGlob('#/include/*'))
 
 env.MBCreateInstallTarget()
 
