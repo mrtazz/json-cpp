@@ -6,10 +6,9 @@ import sys
 env = Environment(ENV=os.environ)
 
 if 'win32' == sys.platform:
-    env.Tool('mingw')
+    env.Tool('mb_mingw', toolpath=[Dir('submodules/mw-scons-tools')])
     env.Replace(CCFLAGS=[])
 
-env.Tool('default')
 env.Append(CCFLAGS='-Wall')
 
 pysrc_root = str(Dir('#/src/main/python'))
