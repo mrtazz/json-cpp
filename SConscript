@@ -35,6 +35,7 @@ libjson = libjsonenv.SharedLibrary(
         File('src/lib_json/json_value.cpp'),
         File('src/lib_json/json_writer.cpp'),])
 Default(libjson)
+libjsonenv.Clean(libjson, '#/obj')
 
 env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 env.MBInstallLib(libjson)
