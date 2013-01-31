@@ -38,8 +38,8 @@ Default(libjson)
 libjsonenv.Clean(libjson, '#/obj')
 
 env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
-env.MBInstallLib(libjson)
-env.MBInstallHeaders(env.MBGlob('#/include/*'))
+env.MBInstallLib(libjson, 'json')
+env.MBInstallHeaders(env.MBGlob('#/include/json/*'), 'json')
 
 env.MBCreateInstallTarget()
 
