@@ -11,15 +11,6 @@ if 'win32' == sys.platform:
 
 env.Append(CCFLAGS='-Wall')
 
-pysrc_root = str(Dir('#/src/main/python'))
-for root,dirnames,filenames in os.walk(pysrc_root):
-    for filename in fnmatch.filter(filenames,'*.py'):
-        rpath = os.path.relpath(root,pysrc_root)
-        outdir = os.path.join('module',rpath)
-        insrc = os.path.join(root,filename)
-        inst.append(cppenv.Install(outdir,insrc))
-        # print outdir,insrc
-
 includes = Dir('include')
 sources = Dir('#/src/lib_json/')
 
@@ -27,8 +18,9 @@ libjsonenv = env.Clone()
 libjsonenv.Append(CPPPATH=[includes])
 libjsonenv.Repository(sources)
 
-env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
+libjsonenv.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 
+libjsonenv.MBSetLibSymName('json')
 libjson = libjsonenv.SharedLibrary(
     'json', [
         File('src/lib_json/json_reader.cpp'),
@@ -37,9 +29,8 @@ libjson = libjsonenv.SharedLibrary(
 Default(libjson)
 libjsonenv.Clean(libjson, '#/obj')
 
-env.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
-env.MBInstallLib(libjson, 'json')
-env.MBInstallHeaders(env.MBGlob('#/include/json/*'), 'json')
+libjsonenv.MBInstallLib(libjson, 'json')
+libjsonenv.MBInstallHeaders(libjsonenv.MBGlob('#/include/json/*'), 'json')
 
-env.MBCreateInstallTarget()
+libjsonenv.MBCreateInstallTarget()
 
