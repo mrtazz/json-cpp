@@ -29,7 +29,6 @@ libjson = libjsonenv.SharedLibrary(
 Default(libjson)
 libjsonenv.Clean(libjson, '#/obj')
 
-libjsonenv.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 libjsonenv.MBInstallLib(libjson, 'jsoncpp')
 libjsonenv.MBInstallHeaders(libjsonenv.MBGlob('#/include/jsoncpp/*'),
                             'jsoncpp')
