@@ -34,6 +34,7 @@ scons install_prefix=%{buildroot}/%{_prefix} config_prefix=%{buildroot}/%{_sysco
 
 %package devel
 Summary:	Developent files for MakerBot json-cpp
+Requires:	jsoncpp
 
 %description devel
 jsoncpp is an implementation of a JSON reader and writer in C++. This is
