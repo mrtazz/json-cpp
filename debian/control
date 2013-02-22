@@ -12,9 +12,7 @@ Package: mb-libjsoncpp-dev
 Section: libdevel
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Provides: libjsoncpp0, libjsoncpp-dev
 Description: MakerBot branch of library for reading and writing JSON for C++
  jsoncpp is an implementation of a JSON reader and writer in C++. This is
- the MakerBot branch of the tree; eventually the Debian port will be 
- retargeted to use the default libjsoncpp-dev package instead.
- .
- This package is a build convenience.
+ the MakerBot branch of the tree.
