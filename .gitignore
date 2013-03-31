@@ -1,4 +1,8 @@
-# ignore lib folder
-lib*
+# don't ignore lib folder anymore (why was that there in the first place?)
+
+# ignore build output directories
+bin
+obj
+
 # ignore object files
 *.o

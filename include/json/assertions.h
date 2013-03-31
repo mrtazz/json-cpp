@@ -13,7 +13,30 @@
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
 #if JSON_USE_EXCEPTION
-#define JSON_ASSERT( condition ) assert( condition );  // @todo <= change this into an exception throw
+
+//Perhaps this should be defined in a source file instead, but which one?
+#include <cstdio>
+#include <stdexcept>
+#include <string>
+namespace Json{
+    namespace internal{
+        namespace{
+            int throwAssertException(const std::string& failMessage, const std::string& file, int line){
+                char buf[24];
+                snprintf(buf, 24, "%d", line);
+                std::string complete(failMessage);
+                complete.reserve(failMessage.size() + file.size() + 32);
+                complete += file;
+                complete += ", line ";
+                complete += buf;
+                throw std::runtime_error(complete);
+                return 0;
+            }
+        }
+    }
+}
+
+#define JSON_ASSERT( condition ) (condition) ? 0 : Json::internal::throwAssertException("Json assertion failed: " #condition ", file ", __FILE__, __LINE__);
 #define JSON_FAIL_MESSAGE( message ) throw std::runtime_error( message );
 #else  // JSON_USE_EXCEPTION
 #define JSON_ASSERT( condition ) assert( condition );
