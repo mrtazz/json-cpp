@@ -103,8 +103,7 @@ duplicateStringValue( const char *value,
 static inline void
 releaseStringValue( char *value )
 {
-   if ( value )
-      free( value );
+    free(value);
 }
 
 } // namespace Json
@@ -1521,6 +1520,13 @@ Value::isObject() const
 }
 
 
+ValueType
+Value::getType() const
+{
+    return type_;
+}
+
+
 void
 Value::setComment( const char *comment,
                    CommentPlacement placement )
@@ -1741,22 +1747,37 @@ PathArgument::PathArgument( const std::string &key )
 // class Path
 // //////////////////////////////////////////////////////////////////
 
-Path::Path( const std::string &path,
-            const PathArgument &a1,
-            const PathArgument &a2,
-            const PathArgument &a3,
-            const PathArgument &a4,
-            const PathArgument &a5 )
+
+Path::Path( const std::string &path )
 {
-   InArgs in;
-   in.push_back( &a1 );
-   in.push_back( &a2 );
-   in.push_back( &a3 );
-   in.push_back( &a4 );
-   in.push_back( &a5 );
-   makePath( path, in );
+    InArgs in;
+    makePath( path, in );
 }
 
+Path::Path( const std::string &path, const PathArgument &a1, const PathArgument &a2, const PathArgument &a3 )
+{
+    InArgs in;
+    in.push_back( &a1 );
+    in.push_back( &a2 );
+    in.push_back( &a3 );
+    makePath( path, in );
+}
+
+Path::Path( const std::string &path, const PathArgument &a1, const PathArgument &a2, const PathArgument &a3, const PathArgument &a4, const PathArgument &a5, const PathArgument &a6, const PathArgument &a7, const PathArgument &a8, const PathArgument &a9, const PathArgument &a10 )
+{
+    InArgs in;
+    in.push_back( &a1 );
+    in.push_back( &a2 );
+    in.push_back( &a3 );
+    in.push_back( &a4 );
+    in.push_back( &a5 );
+    in.push_back( &a6 );
+    in.push_back( &a7 );
+    in.push_back( &a8 );
+    in.push_back( &a9 );
+    in.push_back( &a10 );
+    makePath( path, in );
+}
 
 void
 Path::makePath( const std::string &path,
@@ -1771,7 +1792,11 @@ Path::makePath( const std::string &path,
       {
          ++current;
          if ( *current == '%' )
+         {
             addPathInArg( path, in, itInArg, PathArgument::kindIndex );
+            ++itInArg;
+            ++current;
+         }
          else
          {
             ArrayIndex index = 0;
@@ -1785,6 +1810,7 @@ Path::makePath( const std::string &path,
       else if ( *current == '%' )
       {
          addPathInArg( path, in, itInArg, PathArgument::kindKey );
+         ++itInArg;
          ++current;
       }
       else if ( *current == '.' )
@@ -1803,7 +1829,7 @@ Path::makePath( const std::string &path,
 
 
 void
-Path::addPathInArg( const std::string &path,
+Path::addPathInArg( const std::string &/*path*/,
                     const InArgs &in,
                     InArgs::const_iterator &itInArg,
                     PathArgument::Kind kind )
@@ -1811,10 +1837,14 @@ Path::addPathInArg( const std::string &path,
    if ( itInArg == in.end() )
    {
       // Error: missing argument %d
+      JSON_FAIL_MESSAGE("Json path: not enough arguments");
    }
    else if ( (*itInArg)->kind_ != kind )
    {
       // Error: bad argument type
+      std::stringstream ss;
+      ss << "Json path: wrong argument type (argument " << itInArg - in.begin() << ')';
+      JSON_FAIL_MESSAGE(ss.str());
    }
    else
    {
@@ -1828,21 +1858,33 @@ Path::invalidPath( const std::string &path,
                    int location )
 {
    // Error: invalid path.
+   std::stringstream ss;
+   ss << "Json path: " << path << " is invalid at location " << location;
+   JSON_FAIL_MESSAGE( ss.str() );
 }
-
 
 const Value &
 Path::resolve( const Value &root ) const
 {
    const Value *node = &root;
+
    for ( Args::const_iterator it = args_.begin(); it != args_.end(); ++it )
    {
       const PathArgument &arg = *it;
       if ( arg.kind_ == PathArgument::kindIndex )
       {
-         if ( !node->isArray()  ||  !node->isValidIndex( arg.index_ ) )
+         if ( !node->isArray() )
          {
             // Error: unable to resolve path (array value expected at position...
+            std::stringstream ss;
+            ss << "Json path: unable to resolve (array value expected at token " << it - args_.begin() << ')';
+            JSON_FAIL_MESSAGE( ss.str() );
+         }
+         else if( !node->isValidIndex( arg.index_ ) )
+         {
+             std::stringstream ss;
+             ss << "Json path: unable to resolve (bad array value at token " << it - args_.begin() << ')';
+             JSON_FAIL_MESSAGE( ss.str() );
          }
          node = &((*node)[arg.index_]);
       }
@@ -1851,11 +1893,17 @@ Path::resolve( const Value &root ) const
          if ( !node->isObject() )
          {
             // Error: unable to resolve path (object value expected at position...)
+            std::stringstream ss;
+            ss << "Json path: unable to resolve (object value expected at token " << it - args_.begin() << ')';
+            JSON_FAIL_MESSAGE( ss.str() );
          }
          node = &((*node)[arg.key_]);
          if ( node == &Value::null )
          {
             // Error: unable to resolve path (object has no member named '' at position...)
+            std::stringstream ss;
+            ss << "Json path: unable to resolve (object has no member named " << arg.key_ << " at token " << it - args_.begin() << ')';
+            JSON_FAIL_MESSAGE( ss.str() );
          }
       }
    }
@@ -1902,6 +1950,9 @@ Path::make( Value &root ) const
          if ( !node->isArray() )
          {
             // Error: node is not an array at position ...
+            std::stringstream ss;
+            ss << "Json path: unable to make (node is not an array at token " << it - args_.begin() << ')';
+            JSON_FAIL_MESSAGE(ss.str());
          }
          node = &((*node)[arg.index_]);
       }
@@ -1910,6 +1961,9 @@ Path::make( Value &root ) const
          if ( !node->isObject() )
          {
             // Error: node is not an object at position...
+            std::stringstream ss;
+            ss << "Json path: unable to make (node is not an object at token " << it - args_.begin() << ')';
+            JSON_FAIL_MESSAGE(ss.str());
          }
          node = &((*node)[arg.key_]);
       }

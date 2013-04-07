@@ -292,6 +292,9 @@ namespace Json {
 
       bool isConvertibleTo( ValueType other ) const;
 
+      /// Actual type of the Value
+      ValueType getType() const;
+
       /// Number of values in array or object
       ArrayIndex size() const;
 
@@ -517,7 +520,7 @@ namespace Json {
       PathArgument( const char *key );
       PathArgument( const std::string &key );
 
-   private:
+   public:
       enum Kind
       {
          kindNone = 0,
@@ -543,17 +546,31 @@ namespace Json {
    class Path
    {
    public:
-      Path( const std::string &path,
-            const PathArgument &a1 = PathArgument(),
-            const PathArgument &a2 = PathArgument(),
-            const PathArgument &a3 = PathArgument(),
-            const PathArgument &a4 = PathArgument(),
-            const PathArgument &a5 = PathArgument() );
 
+      // Up to 10 arguments are supported.
+      // With C++11 enabled, there is no hard limit.
+      Path( const std::string &path );
+      Path( const std::string &path, const PathArgument &a1, const PathArgument &a2 = PathArgument(), const PathArgument &a3 = PathArgument() );
+      Path( const std::string &path, const PathArgument &a1, const PathArgument &a2, const PathArgument &a3, const PathArgument &a4, const PathArgument &a5 = PathArgument(),
+            const PathArgument &a6 = PathArgument(), const PathArgument &a7 = PathArgument(), const PathArgument &a8 = PathArgument(), const PathArgument &a9 = PathArgument(), const PathArgument &a10 = PathArgument() );
+
+      #if __cplusplus > 199711L
+      template <typename... Args>
+      Path( const std::string &path, Args... args )
+      {
+          InArgs in;
+          variadic_constructor(in, path, args...);
+      }
+      #endif
+
+      /// Follows the path and returns the destination node.  Triggers an error if the node does not exist.
       const Value &resolve( const Value &root ) const;
+      /// Follows the path and returns the destination node.  This method cannot fail; it returns the default
+      /// value on any error.
       Value resolve( const Value &root,
                      const Value &defaultValue ) const;
-      /// Creates the "path" to access the specified node and returns a reference on the node.
+      /// Follows the path and returns a reference to the destination node, creating it if it does not exist.
+      /// This still requires intermediate objects and arrays to exist.
       Value &make( Value &root ) const;
 
    private:
@@ -568,6 +585,21 @@ namespace Json {
                          PathArgument::Kind kind );
       void invalidPath( const std::string &path,
                         int location );
+
+      #if __cplusplus > 199711L
+      template <typename T, typename... Args>
+      void variadic_constructor(InArgs& in, const std::string &path, const T &a, Args... args)
+      {
+         Json::PathArgument arg(a);
+         in.push_back(&arg);
+         variadic_constructor(in, path, args...);
+      }
+
+      void variadic_constructor(InArgs& in, const std::string &path)
+      {
+         makePath(path, in);
+      }
+      #endif
 
       Args args_;
    };

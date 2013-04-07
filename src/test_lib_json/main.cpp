@@ -112,7 +112,7 @@ struct ValueTest : JsonTest::TestCase
 };
 
 
-std::string 
+std::string
 ValueTest::normalizeFloatingPointStr( const std::string &s )
 {
     std::string::size_type index = s.find_last_of( "eE" );
@@ -1231,7 +1231,7 @@ ValueTest::IsCheck::IsCheck()
 }
 
 
-void 
+void
 ValueTest::checkIs( const Json::Value &value, const IsCheck &check )
 {
    JSONTEST_ASSERT_EQUAL(check.isObject_, value.isObject() );
@@ -1364,7 +1364,7 @@ JSONTEST_FIXTURE( ValueTest, compareType )
 }
 
 
-void 
+void
 ValueTest::checkIsLess( const Json::Value &x, const Json::Value &y )
 {
     JSONTEST_ASSERT( x < y );
@@ -1382,7 +1382,7 @@ ValueTest::checkIsLess( const Json::Value &x, const Json::Value &y )
 }
 
 
-void 
+void
 ValueTest::checkIsEqual( const Json::Value &x, const Json::Value &y )
 {
     JSONTEST_ASSERT( x == y );
@@ -1415,6 +1415,90 @@ JSONTEST_FIXTURE( WriterTest, dropNullPlaceholders )
     JSONTEST_ASSERT( writer.write(nullValue) == "\n" );
 }
 
+#include <iostream>
+JSONTEST_FIXTURE( ValueTest, paths )
+{
+    Json::Value obj( Json::objectValue );
+    Json::Value val1( Json::objectValue );
+    Json::Value val2( Json::arrayValue );
+    Json::Value val3( "string" );
+
+    val1["subkey1"] = Json::Value( 14 );
+    val1["subkey2"] = Json::Value( 3.0 );
+    val1["subkey3"] = Json::Value();
+
+    val2.append( -5 );
+    val2.append( "text" );
+    val2.append( 1.123 );
+
+    obj["key1"] = val1;
+    obj["key2"] = val2;
+    obj["key3"] = val3;
+
+    Json::Path root( ".");
+    JSONTEST_ASSERT_EQUAL( root.resolve(obj), obj );
+    Json::Path root_extraArgs( ".", Json::PathArgument(5), Json::PathArgument("key") );
+    JSONTEST_ASSERT_EQUAL( root_extraArgs.resolve(obj), obj );
+
+    Json::Path toKey1( ".key1" );
+    Json::Path toKey2( ".key2" );
+    Json::Path toKey3( ".key3" );
+    Json::Path toNonexistent( ".ACEBDFG" );
+    JSONTEST_ASSERT_EQUAL( toKey1.resolve(obj), val1 );
+    JSONTEST_ASSERT_EQUAL( toKey2.resolve(obj), val2 );
+    JSONTEST_ASSERT_EQUAL( toKey3.resolve(obj), val3 );
+    JSONTEST_ASSERT_EQUAL( toKey1.resolve(obj, integer_), val1 );
+    JSONTEST_ASSERT_EQUAL( toKey2.resolve(obj, integer_), val2 );
+    JSONTEST_ASSERT_EQUAL( toKey3.resolve(obj, integer_), val3 );
+    JSONTEST_ASSERT_EQUAL( toNonexistent.resolve(obj, integer_), integer_ );
+
+    Json::Path toSubkey1( ".key1.subkey1" );
+    Json::Path toArrval2( ".key2[1]" );
+    Json::Path toNullVal( ".key1.subkey3" );
+    Json::Path toBadArr( ".ACEBDFG[4]" );
+    //Json::Path toNegIndex( ".key2[-1]" ); //Creating a negative index throws an error before using it
+    Json::Path toBigIndex( ".key2[3]" );
+    JSONTEST_ASSERT_EQUAL( toSubkey1.resolve(obj), val1["subkey1"] );
+    JSONTEST_ASSERT_EQUAL( toArrval2.resolve(obj), val2[1] );
+    JSONTEST_ASSERT_EQUAL( toNullVal.resolve(obj), val1["subkey3"] );
+    JSONTEST_ASSERT_EQUAL( toSubkey1.resolve(obj, real_), val1["subkey1"] );
+    JSONTEST_ASSERT_EQUAL( toArrval2.resolve(obj, real_), val2[1] );
+    JSONTEST_ASSERT_EQUAL( toNullVal.resolve(obj, real_), val1["subkey3"] );
+    JSONTEST_ASSERT_EQUAL( toBadArr.resolve(obj, real_), real_ );
+    //JSONTEST_ASSERT_EQUAL( toNegIndex.resolve(obj, real_), real_ );
+    JSONTEST_ASSERT_EQUAL( toBigIndex.resolve(obj, real_), real_ );
+
+    Json::Path key1ToSubkey2( ".subkey2" );
+    JSONTEST_ASSERT_EQUAL( key1ToSubkey2.resolve(val1), val1["subkey2"] );
+
+    //Note: from this point on, access all the nodes by going through obj (because val1-val3 were originally passed by value)
+
+    Json::Path toKey4( ".key4" );
+    toKey4.make(obj) = 9.8765;
+    JSONTEST_ASSERT_EQUAL( obj["key4"], 9.8765 );
+    toKey4.make(obj) = "more text";
+    JSONTEST_ASSERT_EQUAL( obj["key4"], "more text" );
+
+    Json::Path toSubkey4( ".key1.subkey4" );
+    toSubkey4.make(obj) = 50;
+    JSONTEST_ASSERT_EQUAL( obj["key1"]["subkey4"], 50 );
+
+
+    //Test path arguments
+    Json::Path toKey1_args( ".%", "key1" );
+    JSONTEST_ASSERT_EQUAL( toKey1_args.resolve(obj), obj["key1"] );
+    Json::Path toKey2_args( ".%", "key2" );
+    JSONTEST_ASSERT_EQUAL( toKey2_args.resolve(obj), obj["key2"] );
+    Json::Path toSubkey1_args( ".%.%", "key1", "subkey1" );
+    JSONTEST_ASSERT_EQUAL( toSubkey1_args.resolve(obj), obj["key1"]["subkey1"] );
+    Json::Path toArrval3_args( ".%[%]", "key2", 2 );
+    JSONTEST_ASSERT_EQUAL( toArrval3_args.resolve(obj), obj["key2"][2] );
+    Json::Path toArrval2_mixed1( ".key2[%]", 1 );
+    JSONTEST_ASSERT_EQUAL( toArrval2_mixed1.resolve(obj), obj["key2"][1] );
+    Json::Path toArrval2_mixed2( ".%[1]", "key2" );
+    JSONTEST_ASSERT_EQUAL( toArrval2_mixed2.resolve(obj), obj["key2"][1] );
+}
+
 
 int main( int argc, const char *argv[] )
 {
@@ -1438,5 +1522,6 @@ int main( int argc, const char *argv[] )
    JSONTEST_REGISTER_FIXTURE( runner, ValueTest, compareObject );
    JSONTEST_REGISTER_FIXTURE( runner, ValueTest, compareType );
    JSONTEST_REGISTER_FIXTURE( runner, WriterTest, dropNullPlaceholders );
+   JSONTEST_REGISTER_FIXTURE( runner, ValueTest, paths );
    return runner.runCommandLine( argc, argv );
 }

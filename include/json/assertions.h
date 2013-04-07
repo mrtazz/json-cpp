@@ -7,16 +7,27 @@
 # define CPPTL_JSON_ASSERTIONS_H_INCLUDED
 
 #include <stdlib.h>
+#include <stdexcept>
 
 #if !defined(JSON_IS_AMALGAMATION)
 # include <json/config.h>
 #endif // if !defined(JSON_IS_AMALGAMATION)
 
+namespace Json{
+    class json_error : public std::runtime_error
+    {
+    public:
+        explicit json_error( const std::string &what )
+        : runtime_error( what )
+        {}
+    };
+}
+
+
 #if JSON_USE_EXCEPTION
 
 //Perhaps this should be defined in a source file instead, but which one?
 #include <cstdio>
-#include <stdexcept>
 #include <string>
 namespace Json{
     namespace internal{
@@ -29,15 +40,15 @@ namespace Json{
                 complete += file;
                 complete += ", line ";
                 complete += buf;
-                throw std::runtime_error(complete);
+                throw Json::json_error(complete);
                 return 0;
             }
         }
     }
 }
 
-#define JSON_ASSERT( condition ) (condition) ? 0 : Json::internal::throwAssertException("Json assertion failed: " #condition ", file ", __FILE__, __LINE__);
-#define JSON_FAIL_MESSAGE( message ) throw std::runtime_error( message );
+#define JSON_ASSERT( condition ) ( (condition) ? 0 : Json::internal::throwAssertException("Json assertion failed: " #condition ", file ", __FILE__, __LINE__) );
+#define JSON_FAIL_MESSAGE( message ) throw Json::json_error( message );
 #else  // JSON_USE_EXCEPTION
 #define JSON_ASSERT( condition ) assert( condition );
 
