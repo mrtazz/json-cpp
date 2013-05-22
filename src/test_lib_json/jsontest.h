@@ -7,8 +7,11 @@
 # define JSONTEST_H_INCLUDED
 
 # include <json/config.h>
+# include <json/value.h>
+# include <json/writer.h>
 # include <stdio.h>
 # include <deque>
+# include <sstream>
 # include <string>
 
 // //////////////////////////////////////////////////////////////////
@@ -84,12 +87,21 @@ namespace JsonTest {
 
       void printFailure( bool printTestName ) const;
 
+      // Generic operator that will work with anything ostream can deal with.
+      template <typename T>
+      TestResult &operator << ( const T& value ) {
+         std::ostringstream oss;
+         oss.precision( 16 );
+         oss.setf( std::ios_base::floatfield );
+         oss << value;
+         return addToLastFailure(oss.str());
+      }
+
+      // Specialized versions.
       TestResult &operator << ( bool value );
-      TestResult &operator << ( int value );
-      TestResult &operator << ( unsigned int value );
-      TestResult &operator << ( double value );
-      TestResult &operator << ( const char *value );
-      TestResult &operator << ( const std::string &value );
+      // std:ostream does not support 64bits integers on all STL implementation
+      TestResult &operator << ( Json::Int64 value );
+      TestResult &operator << ( Json::UInt64 value );
 
    private:
       TestResult &addToLastFailure( const std::string &message );
@@ -173,19 +185,20 @@ namespace JsonTest {
       Factories tests_;
    };
 
-   template<typename T>
+   template<typename T, typename U>
    TestResult &
-   checkEqual( TestResult &result, const T &expected, const T &actual, 
+   checkEqual( TestResult &result, const T &expected, const U &actual, 
                const char *file, unsigned int line, const char *expr )
    {
-      if ( expected != actual )
+      if ( static_cast< U >( expected ) != actual )
       {
          result.addFailure( file, line, expr );
-         result << "Expected: " << expected << "\n";
+         result << "Expected: " << static_cast< U >( expected ) << "\n";
          result << "Actual  : " << actual;
       }
       return result;
    }
+
 
    TestResult &
    checkStringEqual( TestResult &result, 
@@ -216,8 +229,7 @@ namespace JsonTest {
       result_->predicateStackTail_ = &_minitest_Context;                \
       (expr);                                                           \
       result_->popPredicateContext();                                   \
-   }                                                                    \
-   *result_
+   }
 
 /// \brief Asserts that two values are equals.
 #define JSONTEST_ASSERT_EQUAL( expected, actual )          \
@@ -229,6 +241,7 @@ namespace JsonTest {
 #define JSONTEST_ASSERT_STRING_EQUAL( expected, actual ) \
    JsonTest::checkStringEqual( *result_,                 \
       std::string(expected), std::string(actual),        \
+      __FILE__, __LINE__,                                \
       #expected " == " #actual )
 
 /// \brief Begin a fixture test case.

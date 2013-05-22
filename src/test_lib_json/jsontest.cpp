@@ -249,55 +249,22 @@ TestResult::addToLastFailure( const std::string &message )
    return *this;
 }
 
-
 TestResult &
-TestResult::operator << ( bool value )
-{
-   return addToLastFailure( value ? "true" : "false" );
+TestResult::operator << ( Json::Int64 value ) {
+   return addToLastFailure( Json::valueToString(value) );
 }
 
 
 TestResult &
-TestResult::operator << ( int value )
-{
-   char buffer[32];
-   sprintf( buffer, "%d", value );
-   return addToLastFailure( buffer );
+TestResult::operator << ( Json::UInt64 value ) {
+   return addToLastFailure( Json::valueToString(value) );
 }
 
 
 TestResult &
-TestResult::operator << ( unsigned int value )
-{
-   char buffer[32];
-   sprintf( buffer, "%u", value );
-   return addToLastFailure( buffer );
+TestResult::operator << ( bool value ) {
+   return addToLastFailure(value ? "true" : "false");
 }
-
-
-TestResult &
-TestResult::operator << ( double value )
-{
-   char buffer[32];
-   sprintf( buffer, "%16g", value );
-   return addToLastFailure( buffer );
-}
-
-
-TestResult &
-TestResult::operator << ( const char *value )
-{
-   return addToLastFailure( value ? value 
-                                  : "<NULL>" );
-}
-
-
-TestResult &
-TestResult::operator << ( const std::string &value )
-{
-   return addToLastFailure( value );
-}
-
 
 
 // class TestCase
@@ -373,7 +340,7 @@ Runner::runTestAt( unsigned int index, TestResult &result ) const
    catch ( const std::exception &e ) 
    {
       result.addFailure( __FILE__, __LINE__, 
-         "Unexpected exception caugth:" ) << e.what();
+         "Unexpected exception caught:" ) << e.what();
    }
 #endif // if JSON_USE_EXCEPTION
    delete test;
@@ -513,10 +480,10 @@ Runner::runCommandLine( int argc, const char *argv[] ) const
 }
 
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER)  &&  defined(_DEBUG)
 // Hook MSVCRT assertions to prevent dialog from appearing
 static int 
-msvcrtSilentReportHook( int reportType, char *message, int *returnValue )
+msvcrtSilentReportHook( int reportType, char *message, int * /*returnValue*/ )
 {
    // The default CRT handling of error and assertion is to display
    // an error dialog to the user.
@@ -550,9 +517,11 @@ msvcrtSilentReportHook( int reportType, char *message, int *returnValue )
 void 
 Runner::preventDialogOnCrash()
 {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER)  &&  defined(_DEBUG)
    // Install a hook to prevent MSVCRT error and assertion from
-   // popping a dialog.
+   // popping a dialog
+   // This function a NO-OP in release configuration 
+   // (which cause warning since msvcrtSilentReportHook is not referenced)
    _CrtSetReportHook( &msvcrtSilentReportHook );
 #endif // if defined(_MSC_VER)
 

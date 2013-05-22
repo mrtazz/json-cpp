@@ -1,4 +1,8 @@
-# ignore lib folder
-lib*
+# ignore obj folder
+obj/
 # ignore object files
 *.o
+# ignore msvc debug files
+*.pdb
+# ignore scons database
+.sconsign.dblite

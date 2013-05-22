@@ -6,12 +6,20 @@
 #ifndef CPPTL_JSON_READER_H_INCLUDED
 # define CPPTL_JSON_READER_H_INCLUDED
 
+#if !defined(JSON_IS_AMALGAMATION)
 # include "features.h"
 # include "value.h"
+#endif // if !defined(JSON_IS_AMALGAMATION)
 # include <deque>
 # include <stack>
 # include <string>
-# include <iostream>
+
+// Disable warning C4251: <data member>: <type> needs to have dll-interface to be used by...
+#if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
+# pragma warning(push)
+# pragma warning(disable:4251)
+#endif // if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
+
 
 namespace Json {
 
@@ -49,7 +57,9 @@ namespace Json {
                   bool collectComments = true );
 
       /** \brief Read a Value from a <a HREF="http://www.json.org">JSON</a> document.
-       * \param document UTF-8 encoded string containing the document to read.
+       * \param beginDoc Pointer on the beginning of the UTF-8 encoded string of the document to read.
+       * \param endDoc Pointer on the end of the UTF-8 encoded string of the document to read. 
+       \               Must be >= beginDoc.
        * \param root [out] Contains the root value of the document if it was
        *             successfully parsed.
        * \param collectComments \c true to collect comment and allow writing them back during
@@ -72,8 +82,17 @@ namespace Json {
        * \return Formatted error message with the list of errors with their location in 
        *         the parsed document. An empty string is returned if no error occurred
        *         during parsing.
+       * \deprecated Use getFormattedErrorMessages() instead (typo fix).
        */
+      JSONCPP_DEPRECATED("Use getFormattedErrorMessages instead") 
       std::string getFormatedErrorMessages() const;
+
+      /** \brief Returns a user friendly string that list errors in the parsed document.
+       * \return Formatted error message with the list of errors with their location in 
+       *         the parsed document. An empty string is returned if no error occurred
+       *         during parsing.
+       */
+      std::string getFormattedErrorMessages() const;
 
    private:
       enum TokenType
@@ -184,18 +203,23 @@ namespace Json {
     Result:
     \verbatim
     {
-	"dir": {
-	    "file": {
-		// The input stream JSON would be nested here.
-	    }
-	}
+    "dir": {
+        "file": {
+        // The input stream JSON would be nested here.
+        }
+    }
     }
     \endverbatim
     \throw std::exception on parse error.
     \see Json::operator<<()
    */
-   std::istream& operator>>( std::istream&, Value& );
+   JSON_API std::istream& operator>>( std::istream&, Value& );
 
 } // namespace Json
+
+#if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
+# pragma warning(pop)
+#endif // if defined(JSONCPP_DISABLE_DLL_INTERFACE_WARNING)
+
 
 #endif // CPPTL_JSON_READER_H_INCLUDED
