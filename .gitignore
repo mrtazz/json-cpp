@@ -10,3 +10,5 @@ obj/
 *.suo
 *.idb
 *.pdb
+Win32_Int/
+x64_Int/
