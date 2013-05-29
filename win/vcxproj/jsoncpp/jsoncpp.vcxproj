@@ -162,7 +162,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -176,7 +175,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -190,7 +188,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\json-cpp\include\jsoncpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -204,7 +201,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
@@ -220,7 +216,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -238,7 +233,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -256,7 +250,6 @@
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\json-cpp\include\jsoncpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
@@ -274,7 +267,6 @@
       <ProgramDataBaseFileName>$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
