@@ -14,6 +14,8 @@
 #include <cassert>
 #include <cstring>
 #include <stdexcept>
+#include <iostream>
+#include <iterator>
 
 #if defined(_MSC_VER)  &&  _MSC_VER >= 1400 // VC++ 8.0
 #pragma warning( disable : 4996 )   // disable warning about strdup being deprecated.
@@ -132,8 +134,10 @@ Reader::parse( std::istream& sin,
 
    // Since std::string is reference-counted, this at least does not
    // create an extra copy.
-   std::string doc;
-   std::getline(sin, doc, (char)EOF);
+   //std::string doc;
+   //std::getline(sin, doc, std::ios::eof);
+   std::string doc((std::istreambuf_iterator<char>(sin)),
+                   std::istreambuf_iterator<char>()); 
    return parse( doc, root, collectComments );
 }
 
