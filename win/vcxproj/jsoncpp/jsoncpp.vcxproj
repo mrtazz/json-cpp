@@ -4,12 +4,13 @@
     <ProjectGuid>{304C1572-3F84-4696-907B-F6A03867584A}</ProjectGuid>
     <RootNamespace>jsoncpp</RootNamespace>
   </PropertyGroup>
+  <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_default_to_DLL.proj" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_ProjConfig_DLL.proj" />
   <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_ProjConfig_LIB.proj" />
   <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_common.proj" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ItemDefinitionGroup Condition="true">
+  <ItemDefinitionGroup>
     <ClCompile>
       <PreprocessorDefinitions>$(MBCommonPreprocessorDefs);$(MBBuildJsonDLL);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\src\lib_json;$(MBIncludeJson)\jsoncpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

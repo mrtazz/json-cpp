@@ -5,10 +5,6 @@ import sys
 
 env = Environment(ENV=os.environ)
 
-if 'win32' == sys.platform:
-    env.Tool('mb_mingw', toolpath=[Dir('submodules/mw-scons-tools')])
-    env.Replace(CCFLAGS=[])
-
 env.Append(CCFLAGS='-Wall')
 
 includes = Dir('#include/jsoncpp/')
@@ -21,7 +17,7 @@ libjsonenv.Repository(sources)
 libjsonenv.Tool('mb_install', toolpath=[Dir('submodules/mw-scons-tools')])
 
 libjsonenv.MBSetLibSymName('jsoncpp')
-libjson = libjsonenv.SharedLibrary(
+libjson = libjsonenv.MBSharedLibrary(
     'jsoncpp', [
         File('src/lib_json/json_reader.cpp'),
         File('src/lib_json/json_value.cpp'),
