@@ -4,39 +4,48 @@
     <ProjectGuid>{304C1572-3F84-4696-907B-F6A03867584A}</ProjectGuid>
     <RootNamespace>jsoncpp</RootNamespace>
   </PropertyGroup>
-  <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_default_to_DLL.proj" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_ProjConfig_DLL.proj" />
-  <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_ProjConfig_LIB.proj" />
+  <PropertyGroup>
+    <MBCanBeLib>true</MBCanBeLib>
+    <MBCanBeDLL>true</MBCanBeDLL>
+    <MBCanBeApp>false</MBCanBeApp>
+    <MBDefaultConfigurationType>DynamicLibrary</MBDefaultConfigurationType>
+  </PropertyGroup>
   <Import Project="..\..\..\submodules\mw-scons-tools\mb_msvc_common.proj" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>$(MBCommonPreprocessorDefs);$(MBBuildJsonDLL);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\src\lib_json;$(MBIncludeJson)\jsoncpp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>
+        $(MBCommonPreprocessorDefs);
+        $(MBBuildJsonDLL);
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+        $(MBRepoRoot)\src\lib_json;
+        $(MBIncludeJson)\jsoncpp;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\include\jsoncpp\json\autolink.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\config.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\features.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\forwards.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\json.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\reader.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\value.h" />
-    <ClInclude Include="..\..\..\include\jsoncpp\json\writer.h" />
-    <ClInclude Include="..\..\..\src\lib_json\json_batchallocator.h" />
-    <ClInclude Include="..\..\..\src\lib_json\json_tool.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\autolink.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\config.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\features.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\forwards.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\json.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\reader.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\value.h" />
+    <ClInclude Include="$(MBRepoRoot)\include\jsoncpp\json\writer.h" />
+    <ClInclude Include="$(MBRepoRoot)\src\lib_json\json_batchallocator.h" />
+    <ClInclude Include="$(MBRepoRoot)\src\lib_json\json_tool.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\..\src\lib_json\json_internalarray.inl" />
-    <None Include="..\..\..\src\lib_json\json_internalmap.inl" />
-    <None Include="..\..\..\src\lib_json\json_valueiterator.inl" />
+    <None Include="$(MBRepoRoot)\src\lib_json\json_internalarray.inl" />
+    <None Include="$(MBRepoRoot)\src\lib_json\json_internalmap.inl" />
+    <None Include="$(MBRepoRoot)\src\lib_json\json_valueiterator.inl" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\lib_json\json_reader.cpp" />
-    <ClCompile Include="..\..\..\src\lib_json\json_value.cpp" />
-    <ClCompile Include="..\..\..\src\lib_json\json_writer.cpp" />
+    <ClCompile Include="$(MBRepoRoot)\src\lib_json\json_reader.cpp" />
+    <ClCompile Include="$(MBRepoRoot)\src\lib_json\json_value.cpp" />
+    <ClCompile Include="$(MBRepoRoot)\src\lib_json\json_writer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>
