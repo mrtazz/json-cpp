@@ -277,6 +277,13 @@ namespace Json {
       double asDouble() const;
       bool asBool() const;
 
+      // \brief Provides for looser 'boolean' semantics.
+      // \return Boolean if this object is "valid". For numeric types this
+      // does the same as \ref asBool. For String types, returns false if the
+      // string is empty. For collections, returns false if the collection is
+      // empty.
+      bool asTruthVal() const;
+
       bool isNull() const;
       bool isBool() const;
       bool isInt() const;
