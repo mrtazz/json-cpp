@@ -1,3 +1,6 @@
-[submodule "submodules/mw-scons-tools"]
-	path = submodules/mw-scons-tools
+[submodule "site_scons"]
+	path = site_scons
+	url = git@github.com:makerbot/mw-scons-tools.git
+[submodule "site_scons/site_tools"]
+	path = site_scons/site_tools
 	url = git@github.com:makerbot/mw-scons-tools.git

@@ -2,7 +2,7 @@
 
 import os
 
-env = Environment(ENV=os.environ, tools=['default', 'mb_install'], toolpath=[Dir('submodules/mw-scons-tools')])
+env = Environment(ENV=os.environ, tools=['default', 'mb_install'])
 
 env.Append(CCFLAGS='-Wall')
 
