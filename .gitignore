@@ -2,3 +2,5 @@
 lib*
 # ignore object files
 *.o
+# ignore generated files
+dist/
