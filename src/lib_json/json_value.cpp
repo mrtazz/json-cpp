@@ -919,6 +919,33 @@ Value::asBool() const
    JSON_FAIL_MESSAGE("Value is not convertible to bool.");
 }
 
+bool
+Value::asTruthVal() const {
+    switch (type_)
+    {
+    case booleanValue:
+        return value_.bool_;
+    case nullValue:
+        return false;
+    case intValue:
+        return value_.int_ ? true : false;
+    case uintValue:
+        return value_.uint_ ? true : false;
+    case realValue:
+        return value_.uint_ ? true : false;
+    case stringValue:
+        return value_.string_ && *value_.string_;
+    case objectValue:
+    case arrayValue:
+        return !empty();
+
+    default:
+        break;
+    }
+
+    JSON_FAIL_MESSAGE("Unknown value type");
+}
+
 
 bool 
 Value::isConvertibleTo( ValueType other ) const
