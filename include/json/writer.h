@@ -183,7 +183,7 @@ namespace Json {
 
    /// \brief Output using the StyledStreamWriter.
    /// \see Json::operator>>()
-   std::ostream& operator<<( std::ostream&, const Value &root );
+   JSON_API std::ostream& operator<<( std::ostream&, const Value &root );
 
 } // namespace Json
 
