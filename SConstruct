@@ -1,2 +1,4 @@
 
-SConscript('SConscript', variant_dir='obj/', duplicate=1)
+env = Environment(tools = ['mb_sconstruct'])
+
+env.MBSConscript('SConscript')
