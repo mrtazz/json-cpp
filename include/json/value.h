@@ -100,22 +100,22 @@ namespace Json {
     * - an ordered list of Value
     * - collection of name/value pairs (javascript object)
     *
-    * The type of the held value is represented by a #ValueType and 
+    * The type of the held value is represented by a #ValueType and
     * can be obtained using type().
     *
-    * values of an #objectValue or #arrayValue can be accessed using operator[]() methods. 
-    * Non const methods will automatically create the a #nullValue element 
-    * if it does not exist. 
-    * The sequence of an #arrayValue will be automatically resize and initialized 
+    * values of an #objectValue or #arrayValue can be accessed using operator[]() methods.
+    * Non const methods will automatically create the a #nullValue element
+    * if it does not exist.
+    * The sequence of an #arrayValue will be automatically resize and initialized
     * with #nullValue. resize() can be used to enlarge or truncate an #arrayValue.
     *
     * The get() methods can be used to obtanis default value in the case the required element
     * does not exist.
     *
-    * It is possible to iterate over the list of a #objectValue values using 
+    * It is possible to iterate over the list of a #objectValue values using
     * the getMemberNames() method.
     */
-   class JSON_API Value 
+   class JSON_API Value
    {
       friend class ValueIteratorBase;
 # ifdef JSON_VALUE_USE_INTERNAL_MAP
@@ -163,10 +163,10 @@ namespace Json {
    private:
 #ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
 # ifndef JSON_VALUE_USE_INTERNAL_MAP
-      class CZString 
+      class CZString
       {
       public:
-         enum DuplicationPolicy 
+         enum DuplicationPolicy
          {
             noDuplication = 0,
             duplicate,
@@ -292,6 +292,9 @@ namespace Json {
 
       bool isConvertibleTo( ValueType other ) const;
 
+      /// Actual type of the Value
+      ValueType getType() const;
+
       /// Number of values in array or object
       ArrayIndex size() const;
 
@@ -307,7 +310,7 @@ namespace Json {
       /// \post type() is unchanged
       void clear();
 
-      /// Resize the array to size elements. 
+      /// Resize the array to size elements.
       /// New elements are initialized to null.
       /// May only be called on nullValue or arrayValue.
       /// \pre type() is arrayValue or nullValue
@@ -338,9 +341,9 @@ namespace Json {
       ///  this from the operator[] which takes a string.)
       const Value &operator[]( int index ) const;
 
-      /// If the array contains at least index+1 elements, returns the element value, 
+      /// If the array contains at least index+1 elements, returns the element value,
       /// otherwise returns defaultValue.
-      Value get( ArrayIndex index, 
+      Value get( ArrayIndex index,
                  const Value &defaultValue ) const;
       /// Return true if index < size().
       bool isValidIndex( ArrayIndex index ) const;
@@ -376,7 +379,7 @@ namespace Json {
       const Value &operator[]( const CppTL::ConstString &key ) const;
 # endif
       /// Return the member named key if it exist, defaultValue otherwise.
-      Value get( const char *key, 
+      Value get( const char *key,
                  const Value &defaultValue ) const;
       /// Return the member named key if it exist, defaultValue otherwise.
       Value get( const std::string &key,
@@ -386,7 +389,7 @@ namespace Json {
       Value get( const CppTL::ConstString &key,
                  const Value &defaultValue ) const;
 # endif
-      /// \brief Remove and return the named member.  
+      /// \brief Remove and return the named member.
       ///
       /// Do nothing if it did not exist.
       /// \return the removed Value, or null.
@@ -436,7 +439,7 @@ namespace Json {
       iterator end();
 
    private:
-      Value &resolveReference( const char *key, 
+      Value &resolveReference( const char *key,
                                bool isStatic );
 
 # ifdef JSON_VALUE_USE_INTERNAL_MAP
@@ -517,7 +520,7 @@ namespace Json {
       PathArgument( const char *key );
       PathArgument( const std::string &key );
 
-   private:
+   public:
       enum Kind
       {
          kindNone = 0,
@@ -543,17 +546,31 @@ namespace Json {
    class Path
    {
    public:
-      Path( const std::string &path,
-            const PathArgument &a1 = PathArgument(),
-            const PathArgument &a2 = PathArgument(),
-            const PathArgument &a3 = PathArgument(),
-            const PathArgument &a4 = PathArgument(),
-            const PathArgument &a5 = PathArgument() );
 
+      // Up to 10 arguments are supported.
+      // With C++11 enabled, there is no hard limit.
+      Path( const std::string &path );
+      Path( const std::string &path, const PathArgument &a1, const PathArgument &a2 = PathArgument(), const PathArgument &a3 = PathArgument() );
+      Path( const std::string &path, const PathArgument &a1, const PathArgument &a2, const PathArgument &a3, const PathArgument &a4, const PathArgument &a5 = PathArgument(),
+            const PathArgument &a6 = PathArgument(), const PathArgument &a7 = PathArgument(), const PathArgument &a8 = PathArgument(), const PathArgument &a9 = PathArgument(), const PathArgument &a10 = PathArgument() );
+
+      #if __cplusplus > 199711L
+      template <typename... Args>
+      Path( const std::string &path, Args... args )
+      {
+          InArgs in;
+          variadic_constructor(in, path, args...);
+      }
+      #endif
+
+      /// Follows the path and returns the destination node.  Triggers an error if the node does not exist.
       const Value &resolve( const Value &root ) const;
-      Value resolve( const Value &root, 
+      /// Follows the path and returns the destination node.  This method cannot fail; it returns the default
+      /// value on any error.
+      Value resolve( const Value &root,
                      const Value &defaultValue ) const;
-      /// Creates the "path" to access the specified node and returns a reference on the node.
+      /// Follows the path and returns a reference to the destination node, creating it if it does not exist.
+      /// This still requires intermediate objects and arrays to exist.
       Value &make( Value &root ) const;
 
    private:
@@ -562,12 +579,27 @@ namespace Json {
 
       void makePath( const std::string &path,
                      const InArgs &in );
-      void addPathInArg( const std::string &path, 
-                         const InArgs &in, 
-                         InArgs::const_iterator &itInArg, 
+      void addPathInArg( const std::string &path,
+                         const InArgs &in,
+                         InArgs::const_iterator &itInArg,
                          PathArgument::Kind kind );
-      void invalidPath( const std::string &path, 
+      void invalidPath( const std::string &path,
                         int location );
+
+      #if __cplusplus > 199711L
+      template <typename T, typename... Args>
+      void variadic_constructor(InArgs& in, const std::string &path, const T &a, Args... args)
+      {
+         Json::PathArgument arg(a);
+         in.push_back(&arg);
+         variadic_constructor(in, path, args...);
+      }
+
+      void variadic_constructor(InArgs& in, const std::string &path)
+      {
+         makePath(path, in);
+      }
+      #endif
 
       Args args_;
    };
@@ -618,7 +650,7 @@ namespace Json {
          }
       };
     * \endcode
-    */ 
+    */
    class JSON_API ValueMapAllocator
    {
    public:
@@ -639,7 +671,7 @@ namespace Json {
    {
    public:
       enum { itemPerLink = 6 };  // sizeof(ValueInternalLink) = 128 on 32 bits architecture.
-      enum InternalFlags { 
+      enum InternalFlags {
          flagAvailable = 0,
          flagUsed = 1
       };
@@ -660,7 +692,7 @@ namespace Json {
     * list in each bucket to handle collision. There is an addional twist in that
     * each node of the collision linked list is a page containing a fixed amount of
     * value. This provides a better compromise between memory usage and speed.
-    * 
+    *
     * Each bucket is made up of a chained list of ValueInternalLink. The last
     * link of a given bucket can be found in the 'previous_' field of the following bucket.
     * The last link of the last bucket is stored in tailLink_ as it has no following bucket.
@@ -678,11 +710,11 @@ namespace Json {
 # ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
       struct IteratorState
       {
-         IteratorState() 
+         IteratorState()
             : map_(0)
             , link_(0)
             , itemIndex_(0)
-            , bucketIndex_(0) 
+            , bucketIndex_(0)
          {
          }
          ValueInternalMap *map_;
@@ -711,24 +743,24 @@ namespace Json {
 
       Value *find( const char *key );
 
-      Value &resolveReference( const char *key, 
+      Value &resolveReference( const char *key,
                                bool isStatic );
 
       void remove( const char *key );
 
-      void doActualRemove( ValueInternalLink *link, 
+      void doActualRemove( ValueInternalLink *link,
                            BucketIndex index,
                            BucketIndex bucketIndex );
 
       ValueInternalLink *&getLastLinkInBucket( BucketIndex bucketIndex );
 
-      Value &setNewItem( const char *key, 
-                         bool isStatic, 
-                         ValueInternalLink *link, 
+      Value &setNewItem( const char *key,
+                         bool isStatic,
+                         ValueInternalLink *link,
                          BucketIndex index );
 
-      Value &unsafeAdd( const char *key, 
-                        bool isStatic, 
+      Value &unsafeAdd( const char *key,
+                        bool isStatic,
                         HashKey hashedKey );
 
       HashKey hash( const char *key ) const;
@@ -777,10 +809,10 @@ namespace Json {
 # ifndef JSONCPP_DOC_EXCLUDE_IMPLEMENTATION
       struct IteratorState // Must be a POD
       {
-         IteratorState() 
+         IteratorState()
             : array_(0)
             , currentPageIndex_(0)
-            , currentItemIndex_(0) 
+            , currentItemIndex_(0)
          {
          }
          ValueInternalArray *array_;
@@ -851,7 +883,7 @@ public: // overridden from ValueArrayAllocator
       delete array;
    }
 
-   virtual void reallocateArrayPageIndex( Value **&indexes, 
+   virtual void reallocateArrayPageIndex( Value **&indexes,
                                           ValueInternalArray::PageIndex &indexCount,
                                           ValueInternalArray::PageIndex minNewIndexCount )
    {
@@ -864,7 +896,7 @@ public: // overridden from ValueArrayAllocator
       indexCount = newIndexCount;
       indexes = static_cast<Value **>( newIndexes );
    }
-   virtual void releaseArrayPageIndex( Value **indexes, 
+   virtual void releaseArrayPageIndex( Value **indexes,
                                        ValueInternalArray::PageIndex indexCount )
    {
       if ( indexes )
@@ -883,7 +915,7 @@ public: // overridden from ValueArrayAllocator
    }
 };
       \endcode
-    */ 
+    */
    class JSON_API ValueArrayAllocator
    {
    public:
@@ -894,18 +926,18 @@ public: // overridden from ValueArrayAllocator
       /** \brief Reallocate array page index.
        * Reallocates an array of pointer on each page.
        * \param indexes [input] pointer on the current index. May be \c NULL.
-       *                [output] pointer on the new index of at least 
-       *                         \a minNewIndexCount pages. 
+       *                [output] pointer on the new index of at least
+       *                         \a minNewIndexCount pages.
        * \param indexCount [input] current number of pages in the index.
        *                   [output] number of page the reallocated index can handle.
        *                            \b MUST be >= \a minNewIndexCount.
        * \param minNewIndexCount Minimum number of page the new index must be able to
        *                         handle.
        */
-      virtual void reallocateArrayPageIndex( Value **&indexes, 
+      virtual void reallocateArrayPageIndex( Value **&indexes,
                                              ValueInternalArray::PageIndex &indexCount,
                                              ValueInternalArray::PageIndex minNewIndexCount ) = 0;
-      virtual void releaseArrayPageIndex( Value **indexes, 
+      virtual void releaseArrayPageIndex( Value **indexes,
                                           ValueInternalArray::PageIndex indexCount ) = 0;
       virtual Value *allocateArrayPage() = 0;
       virtual void releaseArrayPage( Value *value ) = 0;
