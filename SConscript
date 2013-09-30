@@ -4,7 +4,7 @@ import os
 
 env = Environment(ENV=os.environ, tools=['default', 'mb_install'])
 
-env.MBAddWindowsDLLBuildFlag('JSON_DLL_BUILD')
+env.MBWindowsSetAPIExport('JSON_DLL_BUILD')
 
 env.MBAddIncludePaths([Dir('include/jsoncpp/')])
 
