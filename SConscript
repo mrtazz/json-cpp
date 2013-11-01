@@ -8,7 +8,6 @@ env.MBWindowsSetAPIExport('JSON_DLL_BUILD')
 
 env.MBAddIncludePaths([Dir('include/jsoncpp/')])
 
-env.MBSetLibSymName('jsoncpp')
 libjson = env.MBSharedLibrary(
     'jsoncpp', [
         File('src/lib_json/json_reader.cpp'),
