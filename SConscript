@@ -8,6 +8,12 @@ env.MBWindowsSetAPIExport('JSON_DLL_BUILD')
 
 env.MBAddIncludePaths([Dir('include/jsoncpp/')])
 
+if not env.MBIsWindows():
+    if env.MBDebugBuild():
+        env.Append(CCFLAGS=['-g'])
+    else:
+        env.Append(CCFLAGS=['-O2'])
+
 libjson = env.MBSharedLibrary(
     'jsoncpp', [
         File('src/lib_json/json_reader.cpp'),
