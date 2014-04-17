@@ -1,4 +1,12 @@
 # ignore lib folder
-lib*
+#lib* #I don't know where this goes but its NOT in the root of the repository (exludes lib_json.vcxproj)
+
 # ignore object files
 *.o
+build
+
+# ignore visual studio generated files
+/makefiles/vc11/*.sdf
+/makefiles/vc11/*.user
+
+/makefiles/vc11/*.suo
