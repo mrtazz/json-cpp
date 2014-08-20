@@ -2,7 +2,10 @@
 
 import os
 
-env = Environment(ENV=os.environ, tools=['default', 'mb_install'])
+env = Environment(
+    ENV=os.environ,
+    tools=['default', 'mb_install'],
+    toolpath=['../mw-scons-tools'])
 
 env.MBWindowsSetAPIExport('JSON_DLL_BUILD')
 
