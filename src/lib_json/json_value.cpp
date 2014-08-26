@@ -724,6 +724,11 @@ Value::asConstString() const
 }
 # endif
 
+Value::operator 
+Value::Int() const
+{
+    return Value::asInt();
+}
 
 Value::Int 
 Value::asInt() const
@@ -749,6 +754,11 @@ Value::asInt() const
    JSON_FAIL_MESSAGE("Value is not convertible to Int.");
 }
 
+Value::operator 
+Value::UInt() const
+{
+    return Value::asUInt();
+}
 
 Value::UInt 
 Value::asUInt() const

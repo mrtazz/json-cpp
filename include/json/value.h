@@ -266,7 +266,9 @@ namespace Json {
       CppTL::ConstString asConstString() const;
 # endif
       Int asInt() const;
+      operator Int() const;
       UInt asUInt() const;
+      operator UInt() const;
 #if defined(JSON_HAS_INT64)
       Int64 asInt64() const;
       UInt64 asUInt64() const;
