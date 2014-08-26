@@ -261,7 +261,9 @@ namespace Json {
       int compare( const Value &other ) const;
 
       const char *asCString() const;
+      operator const char*() const;
       std::string asString() const;
+      operator std::string() const;
 # ifdef JSON_USE_CPPTL
       CppTL::ConstString asConstString() const;
 # endif
@@ -271,13 +273,20 @@ namespace Json {
       operator UInt() const;
 #if defined(JSON_HAS_INT64)
       Int64 asInt64() const;
+      operator Int64() const;
       UInt64 asUInt64() const;
+      operator UInt64() const;
 #endif // if defined(JSON_HAS_INT64)
       LargestInt asLargestInt() const;
+      operator LargestInt() const;
       LargestUInt asLargestUInt() const;
+      operator LargestUInt() const;
       float asFloat() const;
+      operator float() const;
       double asDouble() const;
+      operator double() const;
       bool asBool() const;
+      operator bool() const;
 
       bool isNull() const;
       bool isBool() const;
