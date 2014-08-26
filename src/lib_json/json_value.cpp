@@ -799,7 +799,7 @@ Value::asUInt() const
 # if defined(JSON_HAS_INT64)
 
 Value::operator 
-Value::Int64 const
+Value::Int64() const
 {
     return Value::asInt64();
 }
@@ -828,7 +828,7 @@ Value::asInt64() const
 }
 
 Value::operator 
-Value::UInt64 const
+Value::UInt64() const
 {
     return Value::asUInt64();
 }
@@ -858,12 +858,6 @@ Value::asUInt64() const
 }
 # endif // if defined(JSON_HAS_INT64)
 
-Value::operator 
-Value::asLargestInt const
-{
-    return Value::asLargestInt();
-}
-
 LargestInt 
 Value::asLargestInt() const
 {
@@ -874,12 +868,6 @@ Value::asLargestInt() const
 #endif
 }
 
-
-Value::operator 
-Value::asLargestUInt const
-{
-    return Value::asLargestUInt();
-}
 
 LargestUInt 
 Value::asLargestUInt() const

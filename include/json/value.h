@@ -278,9 +278,7 @@ namespace Json {
       operator UInt64() const;
 #endif // if defined(JSON_HAS_INT64)
       LargestInt asLargestInt() const;
-      operator LargestInt() const;
       LargestUInt asLargestUInt() const;
-      operator LargestUInt() const;
       float asFloat() const;
       operator float() const;
       double asDouble() const;
