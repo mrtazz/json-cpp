@@ -699,6 +699,7 @@ Value::asCString() const
    return value_.string_;
 }
 
+
 Value::operator 
 std::string() const
 {
@@ -735,6 +736,7 @@ Value::asConstString() const
 }
 # endif
 
+
 Value::operator 
 Value::Int() const
 {
@@ -764,6 +766,7 @@ Value::asInt() const
    }
    JSON_FAIL_MESSAGE("Value is not convertible to Int.");
 }
+
 
 Value::operator 
 Value::UInt() const
@@ -827,12 +830,12 @@ Value::asInt64() const
    JSON_FAIL_MESSAGE("Value is not convertible to Int64.");
 }
 
+
 Value::operator 
 Value::UInt64() const
 {
     return Value::asUInt64();
 }
-
 
 Value::UInt64
 Value::asUInt64() const
@@ -858,6 +861,7 @@ Value::asUInt64() const
 }
 # endif // if defined(JSON_HAS_INT64)
 
+
 LargestInt 
 Value::asLargestInt() const
 {
@@ -878,6 +882,7 @@ Value::asLargestUInt() const
     return asUInt64();
 #endif
 }
+
 
 Value::operator 
 double() const
@@ -910,6 +915,7 @@ Value::asDouble() const
    JSON_FAIL_MESSAGE("Value is not convertible to double.");
 }
 
+
 Value::operator 
 float() const
 {
@@ -940,6 +946,7 @@ Value::asFloat() const
    }
    JSON_FAIL_MESSAGE("Value is not convertible to float.");
 }
+
 
 Value::operator 
 bool() const
