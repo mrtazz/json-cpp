@@ -8,6 +8,8 @@ else()
   set(JSONCPP_LIB_TYPE STATIC)
 endif()
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/lib)
 include_directories(include/jsoncpp)
 include_directories(src/lib_json)
 add_subdirectory(src/lib_json)
