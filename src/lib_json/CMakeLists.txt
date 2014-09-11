@@ -1,13 +1,15 @@
-add_library( jsoncpp_lib ${JSONCPP_LIB_TYPE}
+set(headers
     json_tool.h
-    json_reader.cpp
     json_batchallocator.h
+    version.h.in )
+set(set
+    json_reader.cpp
     json_valueiterator.inl
     json_value.cpp
     json_writer.cpp
-    version.h.in )
-set_target_properties( jsoncpp_lib PROPERTIES OUTPUT_NAME jsoncpp )
-set_target_properties( jsoncpp_lib PROPERTIES
-    VERSION ${JSON_CPP_VERSION}
-    SOVERSION ${JSON_CPP_VERSION} )
+    )
+add_library( jsoncpp ${LIB_TYPE} ${sources} ${headers})
+set_target_properties( jsoncpp PROPERTIES 
+    LINKER_LANGUAGE CXX)
+
 

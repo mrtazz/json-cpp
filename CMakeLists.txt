@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 2.6)
+message("Configureing json-cpp")
 project(json-cpp)
-option(JSONCPP_LIB_BUILD_SHARED "Build jsoncpp_lib as a shared library." OFF)
-if(JSONCPP_LIB_BUILD_SHARED)
-  set(JSONCPP_LIB_TYPE SHARED)
-  add_definitions( -DJSON_DLL_BUILD )
-else()
-  set(JSONCPP_LIB_TYPE STATIC)
-endif()
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../build/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/../build/lib)
-include_directories(include/jsoncpp)
+set_shared(false)
+
+file(INSTALL
+    DIRECTORY include/jsoncpp
+    DESTINATION ${INCLUDE_OUTPUT_PATH}
+    FILES_MATCHING PATTERN "*.h")
+    
+include_directories(${INCLUDE_OUTPUT_PATH})
 include_directories(src/lib_json)
 add_subdirectory(src/lib_json)
 
