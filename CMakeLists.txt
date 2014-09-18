@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.6)
 message("Configureing json-cpp")
-project(json-cpp)
+project(jsoncpp)
 
 set_shared(false)
 
