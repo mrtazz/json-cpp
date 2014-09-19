@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 message("Configureing json-cpp")
 project(jsoncpp)
 
-set_shared(false)
+set_shared(true)
 
 file(INSTALL
     DIRECTORY include/jsoncpp
