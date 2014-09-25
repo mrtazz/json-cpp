@@ -2,14 +2,15 @@ cmake_minimum_required(VERSION 2.6)
 message("Configureing json-cpp")
 project(jsoncpp)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+    #set_shared(false)
+else()
+   # set_shared(true)
+endif()
 set_shared(true)
-
-file(INSTALL
-    DIRECTORY include/jsoncpp
-    DESTINATION ${INCLUDE_OUTPUT_PATH}
-    FILES_MATCHING PATTERN "*.h")
+install_headers(${PROJECT_SOURCE_DIR}/include/)
     
-include_directories(${INCLUDE_OUTPUT_PATH})
+include_directories(${INCLUDE_OUTPUT_PATH}/jsoncpp)
 include_directories(src/lib_json)
 add_subdirectory(src/lib_json)
 
