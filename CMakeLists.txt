@@ -3,7 +3,7 @@ message("Configureing json-cpp")
 project(jsoncpp)
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    #set_shared(false)
+    add_definitions("/D Win32")
 else()
    # set_shared(true)
 endif()
