@@ -7,6 +7,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 else()
    # set_shared(true)
 endif()
+add_CXX_compiler_flags()
 set_shared(true)
 install_headers(${PROJECT_SOURCE_DIR}/include/)
     
