@@ -4,7 +4,6 @@ set(headers
     version.h )
 set(sources
     json_reader.cpp
-   # json_valueiterator.inl
     json_value.cpp
     json_writer.cpp
     ) 
