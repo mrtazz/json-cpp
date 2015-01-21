@@ -1,13 +1,10 @@
 message("Configureing json-cpp")
 cmake_minimum_required(VERSION 2.8.3)
 project(jsoncpp)
-set(utils ${CMAKE_SOURCE_DIR}/../../mw-cmake-tools/utils.cmake)
-if(EXISTS "${utils}")
-    include("../../mw-cmake-tools/utils.cmake")
-    set(TR_BUILD true)
-else()
-    include("build/mw-cmake-tools/utils.cmake")
-endif()
+set(MBCMakeTools_DIR ${PROJECT_SOURCE_DIR}/../../mw-cmake-tools/)
+find_package(
+    MBCMakeTools
+    REQUIRED)
 setup_environment()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
