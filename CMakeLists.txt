@@ -7,10 +7,13 @@ find_package(
     MBCMakeTools
     REQUIRED)
 
-# TODO(ted): figure out if this is needed
-# if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    # add_definitions("/D Win32")
-# endif()
+include_directories(${INCLUDE_OUTPUT_PATH}/jsoncpp)
+include_directories(src/lib_json)
+
+enable_testing()
+add_subdirectory(src/jsontestrunner)
+add_subdirectory(src/test_lib_json)
 
 add_subdirectory(src/lib_json)
 add_subdirectory(doc)
+
