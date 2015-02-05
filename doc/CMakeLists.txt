@@ -1,9 +1,4 @@
-set(documents
-    ${PROJECT_SOURCE_DIR}/doc/footer.html
-    ${PROJECT_SOURCE_DIR}/doc/header.html
-    ${PROJECT_SOURCE_DIR}/doc/roadmap.dox
-    ${PROJECT_SOURCE_DIR}/doc/CMakeLists.txt
-    ${PROJECT_SOURCE_DIR}/doc/jsoncpp.dox
-    ${PROJECT_SOURCE_DIR}/doc/doxyfile.in
-    ${PROJECT_SOURCE_DIR}/doc/readme.txt)
-install_docs("${documents}")
+
+install_docs(
+    ${PROJECT_SOURCE_DIR}/doc/readme.txt
+    PREFIX jsoncpp)
