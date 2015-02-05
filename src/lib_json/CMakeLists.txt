@@ -11,6 +11,8 @@ set(sources
 include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
 include_directories("${PROJECT_SOURCE_DIR}/src/lib_json")
 
+add_api(JSON_API)
+
 add_compiler_flags()
 
 # in other projects we use add_api(), but json already had their api set up
