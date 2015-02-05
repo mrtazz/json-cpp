@@ -1,5 +1,8 @@
 # ignore obj folder
 obj/
+# standard cmake folders
+build
+build64
 # ignore object files
 *.o
 # ignore scons database
