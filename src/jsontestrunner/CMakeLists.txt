@@ -3,7 +3,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
 include_directories("${PROJECT_SOURCE_DIR}/src/lib_json")
 include_directories("${PROJECT_SOURCE_DIR}/jsontestrunner")
 
-use_api(JSON)
+use_api(JSON_API)
 
 add_executable(jsontestrunner main.cpp)
 
