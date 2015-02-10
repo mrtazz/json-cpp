@@ -3,7 +3,7 @@ include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
 include_directories("${PROJECT_SOURCE_DIR}/test_lib_json")
 
 use_api(JSON_API)
-
+set_python()
 add_executable(test_lib_json jsontest.cpp main.cpp)
 
 target_link_libraries(test_lib_json jsoncpp)
