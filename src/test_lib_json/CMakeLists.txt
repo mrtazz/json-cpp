@@ -2,7 +2,7 @@
 include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
 include_directories("${PROJECT_SOURCE_DIR}/test_lib_json")
 
-set_python()
+find_package(PythonInterp REQUIRED)
 
 add_executable(test_lib_json jsontest.cpp main.cpp)
 
