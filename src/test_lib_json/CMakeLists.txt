@@ -1,4 +1,4 @@
-
+add_compiler_flags()
 include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
 include_directories("${PROJECT_SOURCE_DIR}/test_lib_json")
 
