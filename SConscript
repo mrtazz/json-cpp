@@ -5,7 +5,7 @@ import os
 env = Environment(
     ENV=os.environ,
     tools=['default', 'mb_install'],
-    toolpath=['#/../mw-scons-tools'])
+    toolpath=['#/../mw-scons-tools', '#/Install/mw-scons-tools'])
 
 env.MBWindowsSetAPIExport('JSON_DLL_BUILD')
 
@@ -37,4 +37,3 @@ env.MBInstallLib(libjson, 'jsoncpp')
 env.MBInstallHeaders(env.MBGlob('#/include/jsoncpp/*'), 'jsoncpp')
 
 env.MBCreateInstallTarget()
-
