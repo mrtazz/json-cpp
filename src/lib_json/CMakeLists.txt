@@ -23,4 +23,4 @@ install_config(
 
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/jsoncpp"
-    DESTINATION "${HEADER_INSTALL_DESTINATION}")
+    DESTINATION "${HEADER_INSTALL_DIR}")
