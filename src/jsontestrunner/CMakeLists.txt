@@ -21,7 +21,7 @@ endif()
 add_test(
     NAME jsontestrunner_test
     COMMAND
-        ${CMAKE_COMMAND} -E env "${test_path}"
+        ${CMAKE_COMMAND} -E env "PATH=${test_path}"
         ${PYTHON_EXECUTABLE}
         "${PROJECT_SOURCE_DIR}/test/runjsontests.py"
         "$<TARGET_FILE:jsontestrunner>" "${PROJECT_SOURCE_DIR}/test/data")
