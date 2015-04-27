@@ -12,9 +12,9 @@ target_link_libraries(test_lib_json jsoncpp)
 
 # we need to run the tests such that they can find the library
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-    set(test_path "$ENV{PATH};$<TARGET_FILE_DIR:jsoncpp>")
+    set(test_path "PATH=$ENV{PATH};$<TARGET_FILE_DIR:jsoncpp>")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    set(test_path "$ENV{DYLD_LIBRARY_PATH}:$<TARGET_FILE_DIR:jsoncpp>")
+    set(test_path "DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}:$<TARGET_FILE_DIR:jsoncpp>")
 else()
     set(test_path "DUMMY=")
 endif()
