@@ -2,3 +2,6 @@
 _build
 _build64
 _build_debug
+
+# Git hooks bytecode file
+/hook_settings.pyc
