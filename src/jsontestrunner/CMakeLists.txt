@@ -16,12 +16,14 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
     set(test_path "PATH=$ENV{PATH};$<TARGET_FILE_DIR:jsoncpp>")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(test_path "DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}:$<TARGET_FILE_DIR:jsoncpp>")
+else()
+    set(test_path "DUMMY=")
 endif()
 
 add_test(
     NAME jsontestrunner_test
     COMMAND
-        ${CMAKE_COMMAND} -E env "PATH=${test_path}"
+        ${CMAKE_COMMAND} -E env "${test_path}"
         ${PYTHON_EXECUTABLE}
         "${PROJECT_SOURCE_DIR}/test/runjsontests.py"
         "$<TARGET_FILE:jsontestrunner>" "${PROJECT_SOURCE_DIR}/test/data")
