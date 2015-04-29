@@ -3,6 +3,7 @@ import os
 import os.path
 from glob import glob
 import optparse
+import subprocess
 
 VALGRIND_CMD = 'valgrind --tool=memcheck --leak-check=yes --undef-value-errors=yes '
 
@@ -47,16 +48,28 @@ def runAllTests( jsontest_executable_path, input_dir = None,
     else:
         test_jsonchecker = []
     failed_tests = []
-    valgrind_path = use_valgrind and VALGRIND_CMD or ''
+
     for input_path in tests + test_jsonchecker:
+        cmd = []
+        if use_valgrind:
+            cmd.append(VALGRIND_CMD)
+
+        cmd.append(jsontest_executable_path)
+
         is_json_checker_test = input_path in test_jsonchecker
-        print 'TESTING:', input_path,
-        options = is_json_checker_test and '--json-checker' or ''
-        pipe = os.popen( "%s%s %s %s" % (
-            valgrind_path, jsontest_executable_path, options,
-            input_path) )
-        process_output = pipe.read()
-        status = pipe.close()
+        if is_json_checker_test:
+            cmd.append('--json-checker')
+
+        cmd.append(input_path)
+
+        print 'TESTING:', cmd
+
+        try:
+            process_output = subprocess.check_output(cmd)
+            status = None
+        except subprocess.CalledProcessError as e:
+            status = e.returncode
+
         if is_json_checker_test:
             expect_failure = os.path.basename( input_path ).startswith( 'fail' )
             if expect_failure:
