@@ -17,7 +17,7 @@ target_include_directories(
     PUBLIC
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/jsoncpp>
         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/lib_json>
-        $<INSTALL_INTERFACE:include>)
+        $<INSTALL_INTERFACE:${HEADER_INSTALL_DIR}>)
 
 export_api(jsoncpp JSON_API)
 
