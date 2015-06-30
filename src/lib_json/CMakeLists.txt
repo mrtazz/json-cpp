@@ -8,18 +8,22 @@ set(sources
     json_value.cpp
     json_writer.cpp)
 
-include_directories("${PROJECT_SOURCE_DIR}/include/jsoncpp")
-include_directories("${PROJECT_SOURCE_DIR}/src/lib_json")
-
 add_compiler_flags()
 
 add_library(jsoncpp SHARED ${sources} ${headers})
 
+target_include_directories(
+    jsoncpp
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/jsoncpp>
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/src/lib_json>
+        $<INSTALL_INTERFACE:${HEADER_INSTALL_DIR}>)
+
 export_api(jsoncpp JSON_API)
 
-install_config(
+generate_and_install_config(
     NAME JsonCpp
-    TARGET jsoncpp)
+    TARGETS jsoncpp)
 
 install(
     DIRECTORY "${PROJECT_SOURCE_DIR}/include/jsoncpp"
