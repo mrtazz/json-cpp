@@ -10,7 +10,7 @@ set(sources
 
 add_compiler_flags()
 
-add_library(jsoncpp SHARED ${sources} ${headers})
+add_library(jsoncpp ${sources} ${headers})
 
 target_include_directories(
     jsoncpp
