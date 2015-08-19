@@ -9,7 +9,7 @@ set(sources
     json_writer.cpp)
 
 add_library(jsoncpp ${sources} ${headers})
-
+use_standard_flags(jsoncpp)
 target_include_directories(
     jsoncpp
     PUBLIC

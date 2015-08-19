@@ -5,7 +5,7 @@ include_directories("${PROJECT_SOURCE_DIR}/test_lib_json")
 find_package(PythonInterp REQUIRED)
 
 add_executable(test_lib_json jsontest.cpp main.cpp)
-
+use_standard_flags(test_lib_json)
 target_link_libraries(test_lib_json jsoncpp)
 
 # we need to run the tests such that they can find the library

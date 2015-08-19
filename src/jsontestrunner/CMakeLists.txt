@@ -6,7 +6,7 @@ include_directories("${PROJECT_SOURCE_DIR}/jsontestrunner")
 find_package(PythonInterp REQUIRED)
 
 add_executable(jsontestrunner main.cpp)
-
+use_standard_flags(jsontestrunner)
 target_link_libraries(jsontestrunner jsoncpp)
 
 # we need to run the tests such that they can find the library
