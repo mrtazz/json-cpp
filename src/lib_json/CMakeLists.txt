@@ -8,10 +8,8 @@ set(sources
     json_value.cpp
     json_writer.cpp)
 
-add_compiler_flags()
-
 add_library(jsoncpp ${sources} ${headers})
-
+use_standard_flags(jsoncpp)
 target_include_directories(
     jsoncpp
     PUBLIC
