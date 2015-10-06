@@ -15,7 +15,7 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     set(test_path "DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}:$<TARGET_FILE_DIR:jsoncpp>")
 else()
-    set(test_path "DUMMY=")
+    set(test_path "LD_LIBRARY_PATH=$<TARGET_FILE_DIR:jsoncpp>:$ENV{DYLD_LIBRARY_PATH}")
 endif()
 
 add_test(
