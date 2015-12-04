@@ -10,5 +10,8 @@ add_subdirectory(doc)
 
 enable_testing()
 add_subdirectory(src/jsontestrunner)
-add_subdirectory(src/test_lib_json)
+
+if(NOT ${MB_BT_PLATFORM} MATCHES "Ubuntu_[0-9]*_32")
+    add_subdirectory(src/test_lib_json)
+endif()
 
